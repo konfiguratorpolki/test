@@ -12,8 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Konfigurator Półki</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <style>
@@ -25,9 +24,125 @@
 
         .instruction-list li { display: flex; align-items: start; margin-bottom: 0.75rem; }
         .instruction-list li svg { width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; flex-shrink: 0; margin-top: 0.125rem; color: #16A34A; }
-         #shelfContainer { margin-bottom: 0.5rem; width: 100%; max-width: 500px; height: 400px; border-radius: 0.5rem; background-color: #F5F5F4; cursor: grab; } /* Dodano mx-auto w HTML */
-         #shelfContainer:active { cursor: grabbing; }
-         @media (min-width: 768px) { #shelfContainer { height: 500px; } }
+
+        /* ---- Style dla wysuwanego panelu 3D (Mobile) ---- */
+        @media (max-width: 767px) {
+            #shelfContainer {
+                position: fixed !important; /* Użyj !important, aby nadpisać ewentualne inne style pozycji */
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100% !important;
+                height: 75vh !important; /* Wysokość panelu - dostosuj wg potrzeb */
+                max-width: none !important; /* Reset max-width na mobile */
+                background-color: #ffffff !important; /* Zmieniono tło dla lepszego kontrastu */
+                box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15) !important;
+                border-top-left-radius: 1rem !important; /* Zaokrąglenie górnych rogów */
+                border-top-right-radius: 1rem !important;
+                z-index: 1050 !important; /* Wyżej niż overlay */
+                transform: translateY(100%); /* Początkowo schowany pod ekranem */
+                visibility: hidden !important;
+                transition: transform 0.35s ease-in-out, visibility 0s linear 0.35s !important;
+                padding: 1rem !important;
+                padding-top: 3rem !important; /* Więcej miejsca na przycisk zamknięcia */
+                display: flex !important; /* Aby umożliwić pozycjonowanie przycisku */
+                flex-direction: column !important;
+                overflow-y: auto !important; /* Gdyby zawartość była wyższa */
+                margin-bottom: 0 !important; /* Reset marginesu */
+            }
+            #shelfContainer.active {
+                transform: translateY(0) !important;
+                visibility: visible !important;
+                transition: transform 0.35s ease-in-out, visibility 0s linear 0s !important;
+            }
+            #close3dPanelButton {
+                display: block !important; /* Pokaż przycisk zamknięcia na mobile */
+                position: absolute;
+                top: 0.75rem; /* Zmieniono pozycję */
+                right: 0.75rem;
+                z-index: 1051; /* Nad zawartością panelu */
+            }
+             /* Wrapper dla treści 3D wewnątrz panelu */
+             #threeJsCanvasWrapper {
+                 width: 100% !important;
+                 /* Wysokość obliczana dynamicznie lub stała */
+                 height: calc(100% - 1rem) !important; /* Dopasuj wysokość, zostawiając miejsce na dolny padding */
+                 min-height: 250px !important; /* Minimalna wysokość canvasu */
+                 border-radius: 0.5rem !important;
+                 background-color: #F5F5F4 !important; /* Tło dla canvasu */
+                 cursor: grab !important;
+                 flex-grow: 1 !important; /* Aby wypełnił dostępną przestrzeń */
+                 margin: 0 !important; /* Reset marginesów */
+                 padding: 0 !important; /* Reset paddingu */
+                 position: relative !important; /* Upewnij się, że jest pozycjonowany */
+                 overflow: hidden; /* Ukryj ewentualny nadmiar */
+             }
+             #threeJsCanvasWrapper:active { cursor: grabbing !important; }
+
+             #modalOverlay {
+                 position: fixed;
+                 top: 0; left: 0; width: 100%; height: 100%;
+                 background-color: rgba(0, 0, 0, 0.5);
+                 opacity: 0; visibility: hidden;
+                 z-index: 1040; /* Niżej niż panel 3D */
+                 transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+             }
+             #modalOverlay.active {
+                 opacity: 1; visibility: visible;
+                 transition: opacity 0.3s ease-in-out, visibility 0s linear 0s;
+             }
+        }
+        /* ---- Koniec stylów dla panelu 3D (Mobile) ---- */
+
+        /* Oryginalne style #shelfContainer dla desktopu */
+        @media (min-width: 768px) {
+             #shelfContainer {
+                 /* Reset styli z mobile - !important nie jest tu potrzebne */
+                 position: static;
+                 bottom: auto;
+                 left: auto;
+                 right: auto;
+                 width: 100%;
+                 height: 500px;
+                 max-width: 500px;
+                 background-color: #F5F5F4;
+                 box-shadow: none;
+                 border-top-left-radius: 0.5rem;
+                 border-top-right-radius: 0.5rem;
+                 border-bottom-left-radius: 0.5rem; /* Dodano dolne zaokrąglenie */
+                 border-bottom-right-radius: 0.5rem;
+                 z-index: auto;
+                 transform: none;
+                 visibility: visible;
+                 transition: none;
+                 padding: 0;
+                 display: block;
+                 flex-direction: initial;
+                 overflow: hidden; /* Ukryj cokolwiek wystaje z canvasu */
+                 margin-bottom: 0.5rem; /* Przywróć margines */
+                 cursor: grab;
+             }
+             #close3dPanelButton {
+                 display: none; /* Ukryj przycisk zamknięcia na desktopie */
+             }
+             #threeJsCanvasWrapper {
+                 width: 100%;
+                 height: 100%; /* Na desktopie wrapper zajmuje całą wysokość kontenera */
+                 min-height: initial;
+                 border-radius: inherit; /* Dziedzicz zaokrąglenie z kontenera */
+                 background-color: transparent; /* Tło niepotrzebne */
+                 cursor: inherit;
+                 flex-grow: initial;
+                 position: static;
+                 overflow: hidden;
+             }
+              #threeJsCanvasWrapper:active { cursor: grabbing; }
+             #modalOverlay {
+                 display: none !important; /* Ukryj overlay na desktopie */
+             }
+        }
+
+
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #D6D3D1; border-radius: 5px; outline: none; opacity: 0.7; transition: opacity .2s; }
         input[type=range]:hover { opacity: 1; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #16A34A; border-radius: 50%; cursor: pointer; transition: background-color 0.15s ease-in-out; }
@@ -46,10 +161,10 @@
         details.color-samples-details > summary .summary-chevron { transition: transform 0.2s ease-in-out; color: #A8A29E; }
         details[open].color-samples-details > summary .summary-chevron { transform: rotate(180deg); color: #16A34A; }
 
-        /* Style dla Swipera wewnątrz <details> - POZOSTAWIONE jeśli Swiper jest nadal używany do próbek */
+        /* Style dla Swipera wewnątrz <details> */
         #materialSwiper {
             width: 100%;
-            height: 180px; /* Wysokość mobilna */
+            height: 250px;
             margin-top: 0.75rem;
             border-radius: 0.375rem;
             background-color: #E7E5E4;
@@ -57,12 +172,11 @@
             overflow: hidden;
         }
         @media (min-width: 768px) {
-            #materialSwiper { height: 250px; /* Wysokość na większych ekranach */ }
+            #materialSwiper { height: 250px; }
         }
         #materialSwiper .swiper-slide { text-align: center; font-size: 18px; background: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
-        #materialSwiper .swiper-slide img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 0.5rem;} /* Dodano border-radius */
+        #materialSwiper .swiper-slide img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 0.5rem;}
         #materialSwiper .material-name { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0.6); color: white; padding: 0.375rem 0.75rem; font-size: 0.875rem; text-align: center; }
-        /* Style dla strzałek Swipera materiałów - POZOSTAWIONE */
         .material-swiper-button-prev,
         .material-swiper-button-next { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; cursor: pointer; background-color: rgba(255, 255, 255, 0.7); border-radius: 50%; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; color: #44403C; transition: background-color 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .material-swiper-button-prev:hover,
@@ -70,13 +184,12 @@
         .material-swiper-button-prev { left: 10px; }
         .material-swiper-button-next { right: 10px; }
         .material-swiper-button-prev::after,
-        .material-swiper-button-next::after { font-family: 'swiper-icons'; font-size: 1rem; font-weight: bold; } /* Użyj 'swiper-icons' jeśli link do Swiper CSS jest obecny */
+        .material-swiper-button-next::after { font-family: 'swiper-icons'; font-size: 1rem; font-weight: bold; }
         .material-swiper-button-prev.swiper-button-disabled,
         .material-swiper-button-next.swiper-button-disabled { opacity: 0.35; cursor: auto; pointer-events: none; }
-        /* Koniec stylów Swipera materiałów */
 
 
-        /* Style dla innych <details> (np. instrukcji na mobile) */
+        /* Style dla innych <details> */
         details:not(.color-samples-details) summary { list-style: none; cursor: pointer; }
         details:not(.color-samples-details) summary::-webkit-details-marker { display: none; }
         details:not(.color-samples-details) summary::marker { display: none; }
@@ -85,52 +198,29 @@
         details:not(.color-samples-details) summary { position: relative; }
         details:not(.color-samples-details) summary::before { content: ''; display:none; }
 
-        /* Ukrywanie elementów tylko wizualnie, ale dostępnie */
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
 
-        /* MODIFIED STYLE for select elements (with arrow restored) */
+        /* Style dla select */
         select.custom-select {
-            -webkit-appearance: none; /* Remove default arrow */
-            -moz-appearance: none;
-            appearance: none;
-            /* Restore background arrow */
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-            background-position: right 0.75rem center;
-            background-repeat: no-repeat;
-            background-size: 1.25em 1.25em;
-            padding-right: 2.75rem; /* Restore padding for arrow */
-            /* --- Keep styles from previous step --- */
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            padding-left: 0.75rem;
-            border-width: 1px;
-            border-color: #A8A29E; /* Grey border - Tailwind stone-400 */
-            border-radius: 0.375rem; /* rounded-md */
-            background-color: #FFFFFF;
-            transition: all 150ms ease-in-out;
-            width: 100%;
+            background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25em 1.25em;
+            padding-right: 2.75rem; padding-top: 0.5rem; padding-bottom: 0.5rem; padding-left: 0.75rem;
+            border-width: 1px; border-color: #A8A29E; border-radius: 0.375rem; background-color: #FFFFFF;
+            transition: all 150ms ease-in-out; width: 100%;
         }
         select.custom-select:focus {
-            outline: 2px solid transparent;
-            outline-offset: 2px;
+            outline: 2px solid transparent; outline-offset: 2px;
             --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
             --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
             box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-            --tw-ring-offset-width: 1px;
-            --tw-ring-color: #16A34A; /* Green ring on focus */
-            border-color: #16A34A; /* Green border on focus */
+            --tw-ring-offset-width: 1px; --tw-ring-color: #16A34A; border-color: #16A34A;
         }
         select.custom-select:disabled {
-            background-color: #F5F5F4;
-            color: #A8A29E;
-            cursor: not-allowed;
-            border-color: #E7E5E4;
-            background-image: none; /* Keep arrow hidden for disabled */
+            background-color: #F5F5F4; color: #A8A29E; cursor: not-allowed; border-color: #E7E5E4; background-image: none;
         }
-        /* END MODIFIED STYLE for select elements */
 
-
-        /* Style dla kwadracika obok selecta */
+        /* Style dla kwadracika koloru */
         .color-swatch-display { display: inline-block; width: 1.25rem; height: 1.25rem; border-radius: 0.25rem; margin-left: 0.5rem; vertical-align: middle; background-color: #E5E7EB; border: 1px solid #D1D5DB; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: background-color 0.2s ease-in-out; flex-shrink: 0; }
         .color-swatch-display.swatch-white-display { border-color: #9CA3AF; }
 
@@ -142,267 +232,134 @@
         .animate-bg-pulse { animation: bg-pulse 3s infinite ease-in-out; }
         @keyframes icon-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-icon-rotate { animation: icon-rotate 15s linear infinite; }
-        /* DODANO: Animacja dla przywróconego koła zębatego */
         @keyframes gallery-spin { to { transform: rotate(360deg); } }
 
 
-        /* Style dla opcji przegródek i montażu półki na kubki */
+        /* Opcje półki na kubki */
         #mugShelfDividersOptions label, #mugShelfMountOptions label {
-            display: block; /* Zmieniono na block dla lepszego układu */
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            color: #374151;
+            display: block; margin-bottom: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #374151;
         }
          #mugShelfDividersOptions input[type="checkbox"], #mugShelfMountOptions input[type="radio"] {
-            margin-right: 0.5rem;
-            cursor: pointer;
-             border-color: #D1D5DB;
-             color: #16A34A;
-             transition: all 0.15s ease-in-out;
+            margin-right: 0.5rem; cursor: pointer; border-color: #D1D5DB; color: #16A34A; transition: all 0.15s ease-in-out;
          }
          #mugShelfDividersOptions input[type="checkbox"] { border-radius: 0.25rem; }
-         #mugShelfMountOptions input[type="radio"] { border-radius: 9999px; } /* Kółko dla radio */
-
+         #mugShelfMountOptions input[type="radio"] { border-radius: 9999px; }
          #mugShelfDividersOptions input[type="checkbox"]:focus, #mugShelfMountOptions input[type="radio"]:focus {
-             ring: 2px;
-             ring-offset-0;
-             ring-green-500;
+             ring: 2px; ring-offset-0; ring-green-500;
          }
-          /* DODANE: Styl dla nagłówka w sekcjach opcji półki na kubki */
-         .mug-options-header {
-            text-md font-semibold mb-2 text-stone-700;
-         }
-          /* DODANE: Styl dla kontenera opcji montażu */
-         #mugShelfMountOptions {
-              display: none;
-              margin-top: 1rem;
-              padding-top: 1rem;
-              border-top: 1px dashed #e5e7eb; /* Lepszy separator */
-         }
+         .mug-options-header { text-md font-semibold mb-2 text-stone-700; }
+         #mugShelfMountOptions { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #e5e7eb; }
 
-         /* Style dla sekcji wczytywania kodu */
-         #loadConfigSection {
-             /* Przeniesione do podsumowania */
-         }
-          #loadConfigSection label {
-              display: block;
-              font-size: 0.875rem; /* text-sm */
-              font-weight: 500; /* font-medium */
-              color: #57534e; /* text-stone-600 */
-              margin-bottom: 0.25rem;
-          }
+         /* Sekcja wczytywania kodu */
+         #loadConfigSection label { display: block; font-size: 0.875rem; font-weight: 500; color: #57534e; margin-bottom: 0.25rem; }
          #loadConfigSection input[type="text"] {
-             width: 100%;
-             border-radius: 0.375rem; /* rounded-md */
-             border: 1px solid #d1d5db; /* border-gray-300 */
-             padding: 0.5rem 0.75rem;
-             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+             width: 100%; border-radius: 0.375rem; border: 1px solid #d1d5db; padding: 0.5rem 0.75rem;
+             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
          }
-         #loadConfigSection input[type="text"]:focus {
-             outline: none;
-             border-color: #10b981; /* focus:border-emerald-500 */
-             box-shadow: 0 0 0 1px #10b981; /* focus:ring-emerald-500 */
-         }
+         #loadConfigSection input[type="text"]:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 1px #10b981; }
           #loadConfigSection button {
-              margin-top: 0.75rem; /* mt-3 */
-              width: 100%;
-              padding: 0.5rem 1rem;
-              background-color: #a8a29e; /* bg-stone-400 */
-              color: white;
-              font-weight: 600; /* font-semibold */
-              border-radius: 0.375rem; /* rounded-md */
-              border: none;
-              cursor: pointer;
-              transition: background-color 0.2s ease, transform 0.1s ease;
+              margin-top: 0.75rem; width: 100%; padding: 0.5rem 1rem; background-color: #a8a29e; color: white;
+              font-weight: 600; border-radius: 0.375rem; border: none; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease;
           }
-          #loadConfigSection button:hover {
-              background-color: #78716c; /* hover:bg-stone-500 */
-          }
-          #loadConfigSection button:active {
-                transform: scale(0.98);
-          }
+          #loadConfigSection button:hover { background-color: #78716c; }
+          #loadConfigSection button:active { transform: scale(0.98); }
 
-        /* ===== POCZĄTEK STYLÓW GALERII Z ZAKŁADKAMI (AKTUALIZACJA) ===== */
+        /* ===== Galeria z zakładkami ===== */
         #tabbedGalleryContainer {
-            background-color: #ffffff;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #e5e7eb;
+            background-color: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #e5e7eb;
         }
-
-        .gallery-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 0.75rem;
-        }
-
+        .gallery-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem; }
         .gallery-tab {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #57534e;
-            background-color: #f5f5f4;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-            white-space: nowrap;
+            padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; color: #57534e; background-color: #f5f5f4;
+            border: 1px solid #e5e7eb; border-radius: 0.375rem; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; white-space: nowrap;
         }
-        .gallery-tab:hover {
-            background-color: #e7e5e4;
-            color: #44403c;
-        }
-        .gallery-tab.active {
-            background-color: #16A34A;
-            color: #ffffff;
-            border-color: #15803d;
-        }
-
-        .gallery-content-wrapper {
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-            min-height: 200px;
-        }
-
-        .gallery-image-area {
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            scrollbar-width: none;
-            padding: 8px 2px;
-            position: relative;
-        }
+        .gallery-tab:hover { background-color: #e7e5e4; color: #44403c; }
+        .gallery-tab.active { background-color: #16A34A; color: #ffffff; border-color: #15803d; }
+        .gallery-content-wrapper { position: relative; width: 100%; overflow: hidden; min-height: 200px; }
+        .gallery-image-area { overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 8px 2px; position: relative; }
         .gallery-image-area::-webkit-scrollbar { display: none; }
-
-        .gallery-grid {
-            display: flex;
-            gap: 15px;
-            width: max-content;
-        }
-
-        /* Style dla kafelka (tile) */
-        .gallery-tile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 260px;
-            flex-shrink: 0;
-        }
+        .gallery-grid { display: flex; gap: 15px; width: max-content; }
+        .gallery-tile { display: flex; flex-direction: column; align-items: center; width: 260px; flex-shrink: 0; }
          @media (max-width:768px){ .gallery-tile { width: 200px; } }
          @media (max-width:480px){ .gallery-tile { width: 160px; } }
-
         .gallery-image-container {
-            position: relative;
-            width: 100%;
-            height: 180px;
-             @media (max-width:768px){ height: 140px; }
-             @media (max-width:480px){ height: 110px; }
-            border-radius: 6px;
-            overflow: hidden;
-            background: #fff;
-            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
-            transition: transform .2s, box-shadow .2s;
-            border: 1px solid #eee;
-            cursor: pointer;
+            position: relative; width: 100%; height: 180px; border-radius: 6px; overflow: hidden; background: #fff;
+             @media (max-width:768px){ height: 140px; } @media (max-width:480px){ height: 110px; }
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08); transition: transform .2s, box-shadow .2s; border: 1px solid #eee; cursor: pointer;
         }
-        .gallery-image-container:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-        .gallery-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #fff;
-        }
-
-        /* Style dla koła zębatego */
+        .gallery-image-container:hover { transform: translateY(-4px); box-shadow: 0 4px 8px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .gallery-image-container img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
         .config-btn {
-            position: absolute;
-            bottom: 6px;
-            right: 6px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(229, 231, 235, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 1px 2px rgb(0 0 0 / .1);
-            cursor: pointer;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .25s;
-            z-index: 5;
+            position: absolute; bottom: 6px; right: 6px; width: 36px; height: 36px; border-radius: 50%; background: rgba(229, 231, 235, 0.8);
+            display: flex; justify-content: center; align-items: center; box-shadow: 0 1px 2px rgb(0 0 0 / .1); cursor: pointer;
+            opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 5;
         }
-        .config-btn svg {
-            stroke: #374151;
-            fill: none;
-            stroke-width: 1.6;
-            animation: gallery-spin 2.5s linear infinite paused;
-            width: 75%;
-            height: 75%;
-        }
-        .gallery-image-container:hover .config-btn {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .gallery-image-container:hover .config-btn svg {
-            animation-play-state: running;
-        }
-
-        /* Styl dla podpisu */
-        .gallery-caption {
-            margin-top: 6px;
-            font-size: .75em;
-            font-weight: 500;
-            color: #6B7280;
-            opacity: 0;
-            transition: opacity .25s;
-            text-align: center;
-            width: 100%;
-        }
+        .gallery-image-container:hover .config-btn { opacity: 1; pointer-events: auto; }
+        .config-btn svg { stroke: #374151; fill: none; stroke-width: 1.6; animation: gallery-spin 2.5s linear infinite paused; width: 75%; height: 75%; }
+        .gallery-image-container:hover .config-btn svg { animation-play-state: running; }
+        .gallery-caption { margin-top: 6px; font-size: .75em; font-weight: 500; color: #6B7280; opacity: 0; transition: opacity .25s; text-align: center; width: 100%; }
         .gallery-image-container:hover + .gallery-caption { opacity: 1; }
-
-
-        /* Strzałki nawigacyjne dla galerii */
         .gallery-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
-            font-size: 18px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 50%;
-            box-shadow: 0 1px 4px rgb(0 0 0 / .1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            opacity: 0;
-            pointer-events: none;
-            transition: background .2s, box-shadow .2s, opacity .3s;
-            z-index: 10;
-            color: #44403c;
+            position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; font-size: 18px; background: #fff;
+            border: 1px solid #e5e7eb; border-radius: 50%; box-shadow: 0 1px 4px rgb(0 0 0 / .1); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0; pointer-events: none; transition: background .2s, box-shadow .2s, opacity .3s; z-index: 10; color: #44403c;
         }
         .gallery-content-wrapper:hover .gallery-arrow { opacity: 1; pointer-events: auto; }
         .gallery-arrow:hover { background: #f3f4f6; box-shadow: 0 2px 8px rgb(0 0 0 /.15); }
         .gallery-prev-arrow { left: 8px; }
         .gallery-next-arrow { right: 8px; }
-        /* ===== KONIEC STYLÓW NOWEJ GALERII Z ZAKŁADKAMI ===== */
+        /* ===== Koniec galerii ===== */
+
+        /* ===== Dolny pasek mobilny ===== */
+        #stickyFooterBar {
+            transform: translateY(0);
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            padding: 0.5rem 0.25rem;
+            height: 60px; /* Stała wysokość */
+            z-index: 990; /* Upewnij się, że jest widoczny, ale pod panelem 3D */
+        }
+
+        #stickyFooterBar > * {
+            background: none; border: none; padding: 0; margin: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; font-size: 0.75rem; line-height: 1rem; text-align: center;
+            flex-grow: 1; flex-basis: 0; height: 100%;
+            transition: background-color 0.15s ease-in-out;
+            min-width: 0;
+            cursor: pointer; /* Kursor dla wszystkich elementów */
+        }
+
+        #stickyFooterBar > *:hover,
+        #stickyFooterBar > *:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            outline: none;
+            border-radius: 0.25rem;
+        }
+
+        #stickyFooterBar button svg,
+        #stickyFooterBar #footerPriceDisplay svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-bottom: 0.125rem;
+            pointer-events: none;
+        }
+
+        /* Styl dla elementu ceny */
+        #footerPriceDisplay {
+            font-weight: bold;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            padding: 0 0.25rem;
+        }
+        /* ===== Koniec dolnego paska ===== */
 
     </style>
+
 </head>
-<body class="flex flex-col justify-center items-center min-h-screen bg-stone-100 font-sans text-stone-800">
+<body class="flex flex-col justify-center items-center min-h-screen bg-stone-100 font-sans text-stone-800 pb-20 md:pb-0">
+
+    <div id="modalOverlay"></div>
 
     <div class="w-full max-w-7xl mx-auto px-4 md:px-6 my-6">
         <details class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg md:hidden group"> <summary class="flex justify-between items-center cursor-pointer list-none">
@@ -472,11 +429,10 @@
                     </div>
                  </div>
                  </div>
-             <div class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md">
+              <div id="dimensionSectionAnchor" class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md">
                 <h2 class="text-lg font-semibold mb-4 flex items-center text-stone-800"><span class="text-green-600 mr-2 text-xl font-bold">2</span>Wybierz wymiary</h2>
                 <label class="block font-medium text-sm mb-1 text-stone-700">Szerokość:</label>
-                <div id="widthSelectionArea">
-                    <select id="width" class="custom-select w-full" onchange="checkCustomWidth();">
+                <div id="widthSelectionArea"> <select id="width" class="custom-select w-full" onchange="checkCustomWidth();">
                         <option value="34">34 cm</option>
                         <option value="44">44 cm</option>
                         <option value="50">50 cm</option>
@@ -499,12 +455,11 @@
                 <label id="depthLabel" class="block font-medium text-sm mt-4 mb-1 text-stone-700">Głębokość:</label>
                 <select id="depth" class="custom-select w-full" onchange="updatePreview(); updateOrderSummary();"></select>
              </div>
-             <div class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md space-y-4">
+              <div id="colorSectionAnchor" class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md space-y-4">
                  <h2 class="text-lg font-semibold mb-4 flex items-center text-stone-800"><span class="text-green-600 mr-2 text-xl font-bold">3</span>Wybierz kolor</h2>
                  <div>
                      <label for="sideColor" class="block font-medium text-sm mb-1 text-stone-700">Kolor boków:</label>
-                     <div class="flex items-center">
-                         <select id="sideColor" class="custom-select flex-grow" onchange="updateOrderSummary(); updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay');">
+                     <div class="flex items-center"> <select id="sideColor" class="custom-select flex-grow" onchange="updateOrderSummary(); updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay');">
                              <option value="">-- Wybierz --</option>
                              <option value="#8B5A2B" data-color="#8B5A2B">Dąb Craft Złoty</option>
                              <option value="#FFFFFF" data-color="#FFFFFF">Biały matowy</option>
@@ -527,24 +482,28 @@
                  </div>
                  <details class="color-samples-details" id="materialSamplesDetails">
                     <summary>
-                        <span>Zobacz próbki materiałów</span>
-                        <svg class="w-4 h-4 summary-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 text-stone-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5C7.305 4.5 3.135 7.515 1.5 12c1.635 4.485 5.805 7.5 10.5 7.5s8.865-3.015 10.5-7.5C20.865 7.515 16.695 4.5 12 4.5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9a3 3 0 100 6 3 3 0 000-6z" />
+                      </svg>
+                      <span>Zobacz próbki kolorów</span>
+                      <svg class="w-4 h-4 summary-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
                     </summary>
                     <div id="materialSwiper" class="swiper">
                         <div class="swiper-wrapper">
                             <div class="swiper-slide">
                                 <img src="img/dabduze.jpg" alt="Dąb Craft Złoty">
-                                <div class="material-name">Dąb Craft Złoty</div>
+                                <div class="material-name">Dąb Craft Złoty - struktura drewna</div>
                             </div>
                             <div class="swiper-slide">
                                 <img src="img/bialyduze.jpg" alt="Biały matowy">
-                                <div class="material-name">Biały matowy</div>
+                                <div class="material-name">Biały matowy - gładki</div>
                             </div>
                             <div class="swiper-slide">
                                 <img src="img/czarnyduze.jpg" alt="Czarny matowy">
-                                <div class="material-name">Czarny matowy</div>
+                                <div class="material-name">Czarny matowy - gładki</div>
                             </div>
                         </div>
                         <div class="material-swiper-button-prev swiper-button-prev"></div>
@@ -552,14 +511,27 @@
                     </div>
                  </details>
                  </div>
-              </div>
+              </div> <div class="w-full md:w-2/3 flex flex-col items-center mb-8 md:mb-0 order-2 md:order-2">
 
-        <div class="w-full md:w-2/3 flex flex-col items-center mb-8 md:mb-0 order-2 md:order-2">
-            <div id="shelfContainer" class="mx-auto"></div>
-            <div class="text-sm text-stone-600 italic mt-2 text-center">Obróć lub zbliż model</div>
+             <div id="shelfContainer" class="mx-auto">
+                 <button id="close3dPanelButton" class="p-2 rounded-full text-stone-600 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-400 md:hidden">
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                       <span class="sr-only">Zamknij podgląd 3D</span>
+                  </button>
+                  <div id="threeJsCanvasWrapper">
+                      </div>
+             </div>
+             <div class="text-sm text-stone-600 italic mt-2 text-center md:hidden">
+                Obróć lub zbliż model (w panelu powyżej na mobilnych)
+             </div>
+             <div class="text-sm text-stone-600 italic mt-2 text-center hidden md:block">
+                 Obróć lub zbliż model
+             </div>
 
-            <div id="shelfCountSection" class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md mt-8 w-full max-w-lg">
-                 <h2 class="text-lg font-semibold mb-4 flex items-center text-stone-800"><span class="text-green-600 mr-2 text-xl font-bold">4</span>Dodaj półki wewnętrzne</h2>
+
+             <div id="shelfCountSection" class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md mt-8 w-full max-w-lg"> <h2 class="text-lg font-semibold mb-4 flex items-center text-stone-800"><span class="text-green-600 mr-2 text-xl font-bold">4</span>Dodaj półki wewnętrzne</h2>
                  <select id="shelfCount" class="custom-select w-full" onchange="updatePreview(); updateOrderSummary();"></select>
                  <p id="gapDisplay" class="mt-3 text-sm text-stone-700 font-medium">Odległość między półkami: <span id="gapSummaryDisplay" class="font-bold text-stone-900"></span></p>
              </div>
@@ -587,9 +559,7 @@
                    <h3 class="text-stone-700 font-semibold mb-3 text-base">Co mówią nasi klienci?</h3>
                    <div id="customerReview" class="text-stone-600 text-base italic review-fade-enter flex items-center justify-center space-x-2 min-h-[4em]"></div>
                </div>
-        </div>
-
-        <div class="w-full md:w-1/3 p-6 bg-stone-50 border border-stone-200 rounded-lg space-y-6 order-3 md:order-3">
+        </div> <div class="w-full md:w-1/3 p-6 bg-stone-50 border border-stone-200 rounded-lg space-y-6 order-3 md:order-3">
              <div class="order-summary bg-white shadow-lg rounded-lg p-6 transition-shadow duration-200 hover:shadow-xl">
                 <h2 class="text-xl font-semibold mb-4 text-stone-800">Podsumowanie Zamówienia</h2>
                 <ul class="divide-y divide-stone-200 text-sm">
@@ -622,973 +592,188 @@
                          <input type="text" id="loadOrderCodeInput" class="text-sm" placeholder="Wklej kod tutaj...">
                          <button id="loadOrderCodeButton" onclick="loadConfigurationFromCode()">Wczytaj konfigurację</button>
                      </div>
-                     </div>
+                 </div>
             </div>
-        </div>
-    </div>
+        </div> </div> <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script>
+        // --- Zmienne globalne i elementy DOM ---
+        // Zadeklarowane tutaj, ale wartości przypisane w DOMContentLoaded lub onload
         let scene, camera, renderer, shelfGroup, controls;
-        const shelfContainer = document.getElementById('shelfContainer');
-        let materialSwiperInstance = null;
+        let shelfContainer, threeJsCanvasWrapper, materialSwiperInstance;
+        let shelfTypeSelect, widthSelect, heightSelect, depthSelect, shelfCountSelect;
+        let customWidthInput, customWidthDisplay, customWidthFee;
+        let shelfTypeOptionsDiv, widthSelectionArea, dimensionSectionAnchor, colorSectionAnchor;
+        let heightLabel, depthLabel, sideColorSelect, shelfColorSelect;
+        let mugShelfSpecificOptionsContainer, mugShelfMountOptionsDiv, mugShelfDividersOptionsDiv;
+        let dividersTopCheckbox, dividersMiddleCheckbox, dividersBottomCheckbox;
+        let loadOrderCodeInput, loadOrderCodeButton, configuratorSection, shelfCountSection;
+        let galleryTabsContainer, galleryGridContainer, galleryImageArea, galleryPrevArrow, galleryNextArrow;
+        let modalOverlay, show3dButton, close3dPanelButton;
+        let footerPriceTextElement;
+
         const originalPreviewMaterialParams = { color: 0x777777, metalness: 0, roughness: 0.6 };
-
-        // --- Elementy DOM ---
-        const shelfTypeSelect = document.getElementById('shelfType');
-        const widthSelect = document.getElementById('width');
-        const heightSelect = document.getElementById('height');
-        const depthSelect = document.getElementById('depth');
-        const shelfCountSelect = document.getElementById('shelfCount');
-        const customWidthInput = document.getElementById('customWidthInput');
-        const customWidthDisplay = document.getElementById('customWidthDisplay');
-        const customWidthFee = document.getElementById('customWidthFee');
-        const shelfTypeOptionsDiv = document.getElementById('shelfTypeOptions');
-        const widthSelectionArea = document.getElementById('widthSelectionArea');
-        const heightLabel = document.getElementById('heightLabel');
-        const depthLabel = document.getElementById('depthLabel');
-        const sideColorSelect = document.getElementById('sideColor');
-        const shelfColorSelect = document.getElementById('shelfColor');
-        const mugShelfSpecificOptionsContainer = document.getElementById('mugShelfSpecificOptionsContainer');
-        const mugShelfMountOptionsDiv = document.getElementById('mugShelfMountOptions');
-        const mugShelfDividersOptionsDiv = document.getElementById('mugShelfDividersOptions');
-        const dividersTopCheckbox = document.getElementById('dividersTop');
-        const dividersMiddleCheckbox = document.getElementById('dividersMiddle');
-        const dividersBottomCheckbox = document.getElementById('dividersBottom');
-        const loadOrderCodeInput = document.getElementById('loadOrderCodeInput');
-        const loadOrderCodeButton = document.getElementById('loadOrderCodeButton');
-        const configuratorSection = document.getElementById('configuratorSection');
-
-        // Elementy nowej galerii
-        const galleryTabsContainer = document.getElementById('galleryTabsContainer');
-        const galleryGridContainer = document.getElementById('galleryGridContainer');
-        const galleryImageArea = document.getElementById('galleryImageArea');
-        const galleryPrevArrow = document.querySelector('.gallery-prev-arrow');
-        const galleryNextArrow = document.querySelector('.gallery-next-arrow');
-
-
-        // --- Mapowania dla kodowania/dekodowania ---
         const colorValueToCode = { "#8B5A2B": "0", "#FFFFFF": "1", "#000000": "2", "": "-" };
         const colorCodeToValue = { "0": "#8B5A2B", "1": "#FFFFFF", "2": "#000000", "-": "" };
         const typeValueToCode = { "standing": "s", "hanging": "h", "mug_shelf": "m" };
         const typeCodeToValue = { "s": "standing", "h": "hanging", "m": "mug_shelf" };
         const mountValueToCode = { "hanging": "h", "standing": "s" };
         const mountCodeToValue = { "h": "hanging", "s": "standing" };
-
-
-        // --- Pierwotne opcje selectów (do przywracania) ---
-        const originalWidthOptions = Array.from(widthSelect.options).map(opt => ({value: opt.value, text: opt.text}));
-        const originalHeightOptions = Array.from(heightSelect.options).map(opt => ({value: opt.value, text: opt.text}));
+        let originalWidthOptions = []; // Zostaną wypełnione później
+        let originalHeightOptions = [];
         const originalDepthOptions = { '10': '10 cm', '15': '15 cm' };
-
-        function getCurrentWidth() { return widthSelect.value === 'custom' ? (customWidthInput.value || 35) : widthSelect.value; }
         const pricing = {"34":{"40":{"10":{"2":150},"15":{"2":250}},"60":{"10":{"2":175,"3":200},"15":{"2":275,"3":300}},"80":{"10":{"2":200,"3":225,"4":250,"5":279},"15":{"2":300,"3":325,"4":350,"5":379}}},"44":{"40":{"10":{"2":169},"15":{"2":269}},"60":{"10":{"2":179,"3":189},"15":{"2":279,"3":289}},"80":{"10":{"2":200,"3":250,"4":275,"5":299},"15":{"2":300,"3":350,"4":375,"5":399}}},"50":{"40":{"10":{"2":179},"15":{"2":279}},"60":{"10":{"2":189,"3":199},"15":{"2":289,"3":299}},"80":{"10":{"2":250,"3":250,"4":300,"5":329},"15":{}}},"60":{"40":{"10":{"2":179},"15":{"2":279}},"60":{"10":{"2":209,"3":219},"15":{"2":309,"3":319}},"80":{"10":{"2":250,"3":275,"4":325,"5":319},"15":{}}}};
         const mugShelfPricing = {"44": 169, "60": 179};
+        const galleryData = [ {title:'Półki wiszące', imgs:['img/1.jpg','img/2.jpg','img/3.jpg','img/4.jpg','img/5.jpg','img/6.jpg','img/7.jpg','img/8.jpg','img/9.jpg','img/10.jpg']}, {title:'Półki wiszące', imgs:['img/1a.jpg','img/2a.jpg','img/3a.jpg','img/4a.jpg','img/5a.jpg','img/6a.jpg','img/7a.jpg','img/8a.jpg','img/9a.jpg','img/10a.jpg']}, {title:'Półki na kubki', imgs:['img/dabduze.jpg','img/bialyduze.jpg','img/czarnyduze.jpg']} ];
 
-        function updateDepthOptions() {
-            const width = getCurrentWidth();
-            const height = heightSelect.value;
-            const currentDepth = depthSelect.value;
-            let availableDepths = ['10'];
-            const widthValue = widthSelect.value;
-            let allow15 = false;
-
-            if (widthValue === "custom") {
-                const customWidth = parseFloat(width) || 35;
-                const standardWidthKey = customWidth < 39 ? "34" : customWidth < 47 ? "44" : customWidth < 54 ? "50" : "60";
-                if (pricing[standardWidthKey]?.[height]?.['15'] && Object.keys(pricing[standardWidthKey]?.[height]?.['15']).length > 0) {
-                    allow15 = true;
-                }
-            } else {
-                if (pricing[widthValue]?.[height]?.['15'] && Object.keys(pricing[widthValue]?.[height]?.['15']).length > 0) {
-                    allow15 = true;
-                }
-            }
-
-            if (allow15) availableDepths.push('15');
-            const selectedDepth = availableDepths.includes(currentDepth) ? currentDepth : availableDepths[0];
-            depthSelect.innerHTML = "";
-            availableDepths.forEach(depth => {
-                const option = document.createElement('option');
-                option.value = depth;
-                option.textContent = `${depth} cm`;
-                depthSelect.appendChild(option);
-            });
-            depthSelect.value = selectedDepth;
-        }
-
-        function updateShelfCountOptions() {
-            const height = heightSelect.value;
-            const shelfType = shelfTypeSelect.value;
-            const currentValue = shelfCountSelect.value;
-            let options = { '0': 'brak półek' };
-
-            if (shelfType === 'mug_shelf') {
-                 options = { '2': '2 półki' };
-            } else {
-                if (height === "40") options['2'] = '2 półki';
-                else if (height === "60") { options['2'] = '2 półki'; options['3'] = '3 półki'; }
-                else if (height === "80") { options['2'] = '2 półki'; options['3'] = '3 półki'; options['4'] = '4 półki'; options['5'] = '5 półki'; }
-            }
-
-            shelfCountSelect.innerHTML = "";
-            for (const value in options) {
-                const option = document.createElement('option');
-                option.value = value;
-                option.textContent = options[value];
-                shelfCountSelect.appendChild(option);
-            }
-            shelfCountSelect.value = options.hasOwnProperty(currentValue) ? currentValue : (shelfType === 'mug_shelf' ? '2' : "0");
-        }
-
-        function checkCustomWidth() {
-            const isCustom = widthSelect.value === 'custom';
-            customWidthInput.style.display = isCustom ? 'block' : 'none';
-            customWidthDisplay.style.display = isCustom ? 'inline' : 'none';
-            customWidthFee.style.display = isCustom ? 'inline' : 'none';
-            if (isCustom) {
-                customWidthDisplay.textContent = customWidthInput.value + ' cm';
-            }
-            handleDimensionChange();
-        }
-
-        function handleDimensionChange() {
-            if (shelfTypeSelect.value !== 'mug_shelf') {
-                updateDepthOptions();
-                updateShelfCountOptions();
-            }
-            updatePreview();
-            updateOrderSummary();
-        }
-
-        function handleShelfTypeChange() {
-            const shelfColorLabel = document.getElementById('shelfColorLabel');
-            const shelfType = shelfTypeSelect.value;
-            const noTopChecked = document.getElementById('noTopShelf')?.checked || false;
-            const noBottomChecked = document.getElementById('noBottomShelf')?.checked || false;
-
-            shelfTypeOptionsDiv.innerHTML = '';
-            shelfTypeOptionsDiv.style.display = 'none';
-            mugShelfSpecificOptionsContainer.style.display = 'none';
-            mugShelfMountOptionsDiv.innerHTML = '';
-            mugShelfMountOptionsDiv.style.display = 'none';
-             if(dividersTopCheckbox) dividersTopCheckbox.checked = false;
-             if(dividersMiddleCheckbox) dividersMiddleCheckbox.checked = false;
-             if(dividersBottomCheckbox) dividersBottomCheckbox.checked = false;
-
-            restoreDimensionControls();
-
-            if (shelfType === 'standing') {
-                shelfTypeOptionsDiv.style.display = 'block';
-                shelfTypeOptionsDiv.innerHTML = `<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="noTopShelf" class="rounded border-stone-300 text-green-600 shadow-sm focus:ring-green-500" onchange="updatePreview(); updateOrderSummary();" ${noTopChecked ? 'checked' : ''}> <span class="text-stone-700">Bez górnej półki</span></label><label class="flex items-center space-x-2 text-sm mt-1 cursor-pointer"><input type="checkbox" id="noBottomShelf" class="rounded border-stone-300 text-green-600 shadow-sm focus:ring-green-500" onchange="updatePreview(); updateOrderSummary();" ${noBottomChecked ? 'checked' : ''}> <span class="text-stone-700">Bez dolnej półki (podstawy)</span></label>`;
-                updateDepthOptions();
-                updateShelfCountOptions();
-            } else if (shelfType === 'hanging') {
-                shelfTypeOptionsDiv.style.display = 'block';
-                shelfTypeOptionsDiv.innerHTML = `<label class="flex items-center space-x-2 text-sm mt-1 cursor-pointer"><input type="checkbox" id="noTopShelf" class="rounded border-stone-300 text-green-600 shadow-sm focus:ring-green-500" onchange="updatePreview(); updateOrderSummary();" ${noTopChecked ? 'checked' : ''}> <span class="text-stone-700">Bez górnej półki</span></label>`;
-                const bottomCheckbox = document.getElementById('noBottomShelf');
-                if (bottomCheckbox) bottomCheckbox.checked = false;
-                updateDepthOptions();
-                updateShelfCountOptions();
-            } else if (shelfType === 'mug_shelf') {
-                widthSelect.value = '44';
-                heightSelect.value = '40';
-                depthSelect.value = '10';
-                heightSelect.disabled = true;
-                depthSelect.disabled = true;
-                heightLabel.classList.add('text-stone-400');
-                depthLabel.classList.add('text-stone-400');
-                widthSelect.innerHTML = '';
-                widthSelect.add(new Option('44 cm', '44'));
-                widthSelect.add(new Option('60 cm', '60'));
-                widthSelect.value = '44';
-                widthSelect.removeEventListener('change', checkCustomWidth);
-                widthSelect.addEventListener('change', handleMugShelfWidthChange);
-                customWidthInput.style.display = 'none';
-                customWidthDisplay.style.display = 'none';
-                customWidthFee.style.display = 'none';
-
-                updateShelfCountOptions();
-                shelfCountSelect.disabled = true;
-
-                mugShelfSpecificOptionsContainer.style.display = 'block';
-                mugShelfMountOptionsDiv.style.display = 'block';
-                mugShelfMountOptionsDiv.innerHTML = `
-                    <h3 class="text-md font-semibold mb-2 text-stone-700">Sposób montażu:</h3>
-                    <label class="flex items-center space-x-2">
-                        <input type="radio" name="mugShelfMount" value="hanging" class="rounded-full border-stone-300 text-green-600 shadow-sm focus:ring-green-500 focus:ring-offset-0 focus:ring-2" onchange="updatePreview(); updateOrderSummary();" checked> <span>Wisząca</span>
-                    </label>
-                    <label class="flex items-center space-x-2 mt-1">
-                        <input type="radio" name="mugShelfMount" value="standing" class="rounded-full border-stone-300 text-green-600 shadow-sm focus:ring-green-500 focus:ring-offset-0 focus:ring-2" onchange="updatePreview(); updateOrderSummary();">
-                        <span>Stojąca</span>
-                    </label>
-                `;
-            }
-
-             if (shelfColorLabel) {
-                 if (shelfType === 'mug_shelf') {
-                     shelfColorLabel.textContent = 'Kolor półek i przegródek:';
-                 } else {
-                     shelfColorLabel.textContent = 'Kolor półek i podstaw:';
-                 }
-             }
-
-            updatePreview();
-            updateOrderSummary();
-        }
-
-
-        function handleMugShelfWidthChange() {
-             if(dividersTopCheckbox) dividersTopCheckbox.checked = false;
-             if(dividersMiddleCheckbox) dividersMiddleCheckbox.checked = false;
-             if(dividersBottomCheckbox) dividersBottomCheckbox.checked = false;
-             heightSelect.value = '40';
-             depthSelect.value = '10';
-             shelfCountSelect.value = '2';
-             updatePreview();
-             updateOrderSummary();
-        }
-
-        function restoreDimensionControls() {
-            heightSelect.disabled = false;
-            depthSelect.disabled = false;
-            shelfCountSelect.disabled = false;
-            heightLabel.classList.remove('text-stone-400');
-            depthLabel.classList.remove('text-stone-400');
-            widthSelect.innerHTML = '';
-            originalWidthOptions.forEach(opt => widthSelect.add(new Option(opt.text, opt.value)));
-            widthSelect.removeEventListener('change', handleMugShelfWidthChange);
-            widthSelect.addEventListener('change', checkCustomWidth);
-            checkCustomWidth();
-            const currentHeight = heightSelect.value;
-            heightSelect.innerHTML = '';
-            originalHeightOptions.forEach(opt => heightSelect.add(new Option(opt.text, opt.value)));
-             if (Array.from(heightSelect.options).some(opt => opt.value === currentHeight)) {
-                heightSelect.value = currentHeight;
-             }
-        }
-
-
-        // --- Logika 3D ---
-        function init3D() {
-            const container = document.getElementById("shelfContainer"); if (!container) return; scene = new THREE.Scene(); scene.background = new THREE.Color(0xf0f0f0); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(4, 5, 7); renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(container.clientWidth, container.clientHeight); container.innerHTML = ''; container.appendChild(renderer.domElement); scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1)); const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6); directionalLight.position.set(4, 8, 3); scene.add(directionalLight); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; window.addEventListener('resize', onWindowResize, false); updatePreview(); animate();
-        }
-        function onWindowResize() { if (!camera || !renderer || !shelfContainer) return; camera.aspect = shelfContainer.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(shelfContainer.clientWidth, shelfContainer.clientHeight); }
-
-        function animate() {
-             requestAnimationFrame(animate);
-             if (shelfGroup && shelfTypeSelect && shelfTypeSelect.value !== 'mug_shelf') {
-                 shelfGroup.rotation.y += 0.004;
-             }
-             controls.update();
-             renderer.render(scene, camera);
-         }
-
+        // --- Funkcje ---
+        function getCurrentWidth() { return widthSelect.value === 'custom' ? (customWidthInput.value || 35) : widthSelect.value; }
+        function updateDepthOptions() { const width = getCurrentWidth(); const height = heightSelect.value; const currentDepth = depthSelect.value; let availableDepths = ['10']; const widthValue = widthSelect.value; let allow15 = false; if (widthValue === "custom") { const customWidth = parseFloat(width) || 35; const standardWidthKey = customWidth < 39 ? "34" : customWidth < 47 ? "44" : customWidth < 54 ? "50" : "60"; if (pricing[standardWidthKey]?.[height]?.['15'] && Object.keys(pricing[standardWidthKey]?.[height]?.['15']).length > 0) { allow15 = true; } } else { if (pricing[widthValue]?.[height]?.['15'] && Object.keys(pricing[widthValue]?.[height]?.['15']).length > 0) { allow15 = true; } } if (allow15) availableDepths.push('15'); const selectedDepth = availableDepths.includes(currentDepth) ? currentDepth : availableDepths[0]; depthSelect.innerHTML = ""; availableDepths.forEach(depth => { const option = document.createElement('option'); option.value = depth; option.textContent = `${depth} cm`; depthSelect.appendChild(option); }); depthSelect.value = selectedDepth; }
+        function updateShelfCountOptions() { const height = heightSelect.value; const shelfType = shelfTypeSelect.value; const currentValue = shelfCountSelect.value; let options = { '0': 'brak półek' }; if (shelfType === 'mug_shelf') { options = { '2': '2 półki' }; } else { if (height === "40") options['2'] = '2 półki'; else if (height === "60") { options['2'] = '2 półki'; options['3'] = '3 półki'; } else if (height === "80") { options['2'] = '2 półki'; options['3'] = '3 półki'; options['4'] = '4 półki'; options['5'] = '5 półki'; } } shelfCountSelect.innerHTML = ""; for (const value in options) { const option = document.createElement('option'); option.value = value; option.textContent = options[value]; shelfCountSelect.appendChild(option); } shelfCountSelect.value = options.hasOwnProperty(currentValue) ? currentValue : (shelfType === 'mug_shelf' ? '2' : "0"); }
+        function checkCustomWidth() { const isCustom = widthSelect.value === 'custom'; customWidthInput.style.display = isCustom ? 'block' : 'none'; customWidthDisplay.style.display = isCustom ? 'inline' : 'none'; customWidthFee.style.display = isCustom ? 'inline' : 'none'; if (isCustom) { customWidthDisplay.textContent = customWidthInput.value + ' cm'; } handleDimensionChange(); }
+        function handleDimensionChange() { if (shelfTypeSelect.value !== 'mug_shelf') { updateDepthOptions(); updateShelfCountOptions(); } updatePreview(); updateOrderSummary(); }
+        function handleShelfTypeChange() { const shelfColorLabel = document.getElementById('shelfColorLabel'); const shelfType = shelfTypeSelect.value; const noTopChecked = document.getElementById('noTopShelf')?.checked || false; const noBottomChecked = document.getElementById('noBottomShelf')?.checked || false; shelfTypeOptionsDiv.innerHTML = ''; shelfTypeOptionsDiv.style.display = 'none'; mugShelfSpecificOptionsContainer.style.display = 'none'; mugShelfMountOptionsDiv.innerHTML = ''; mugShelfMountOptionsDiv.style.display = 'none'; if(dividersTopCheckbox) dividersTopCheckbox.checked = false; if(dividersMiddleCheckbox) dividersMiddleCheckbox.checked = false; if(dividersBottomCheckbox) dividersBottomCheckbox.checked = false; restoreDimensionControls(); if (shelfType === 'standing') { shelfTypeOptionsDiv.style.display = 'block'; shelfTypeOptionsDiv.innerHTML = `<label class="flex items-center space-x-2 text-sm cursor-pointer"><input type="checkbox" id="noTopShelf" class="rounded border-stone-300 text-green-600 shadow-sm focus:ring-green-500" onchange="updatePreview(); updateOrderSummary();" ${noTopChecked ? 'checked' : ''}> <span class="text-stone-700">Bez górnej półki</span></label><label class="flex items-center space-x-2 text-sm mt-1 cursor-pointer"><input type="checkbox" id="noBottomShelf" class="rounded border-stone-300 text-green-600 shadow-sm focus:ring-green-500" onchange="updatePreview(); updateOrderSummary();" ${noBottomChecked ? 'checked' : ''}> <span class="text-stone-700">Bez dolnej półki (podstawy)</span></label>`; updateDepthOptions(); updateShelfCountOptions(); } else if (shelfType === 'hanging') { shelfTypeOptionsDiv.style.display = 'block'; shelfTypeOptionsDiv.innerHTML = `<label class="flex items-center space-x-2 text-sm mt-1 cursor-pointer"><input type="checkbox" id="noTopShelf" class="rounded border-stone-300 text-green-600 shadow-sm focus:ring-green-500" onchange="updatePreview(); updateOrderSummary();" ${noTopChecked ? 'checked' : ''}> <span class="text-stone-700">Bez górnej półki</span></label>`; const bottomCheckbox = document.getElementById('noBottomShelf'); if (bottomCheckbox) bottomCheckbox.checked = false; updateDepthOptions(); updateShelfCountOptions(); } else if (shelfType === 'mug_shelf') { widthSelect.value = '44'; heightSelect.value = '40'; depthSelect.value = '10'; heightSelect.disabled = true; depthSelect.disabled = true; heightLabel.classList.add('text-stone-400'); depthLabel.classList.add('text-stone-400'); widthSelect.innerHTML = ''; widthSelect.add(new Option('44 cm', '44')); widthSelect.add(new Option('60 cm', '60')); widthSelect.value = '44'; widthSelect.removeEventListener('change', checkCustomWidth); widthSelect.addEventListener('change', handleMugShelfWidthChange); customWidthInput.style.display = 'none'; customWidthDisplay.style.display = 'none'; customWidthFee.style.display = 'none'; updateShelfCountOptions(); shelfCountSelect.disabled = true; mugShelfSpecificOptionsContainer.style.display = 'block'; mugShelfMountOptionsDiv.style.display = 'block'; mugShelfMountOptionsDiv.innerHTML = `<h3 class="text-md font-semibold mb-2 text-stone-700">Sposób montażu:</h3><label class="flex items-center space-x-2"><input type="radio" name="mugShelfMount" value="hanging" class="rounded-full border-stone-300 text-green-600 shadow-sm focus:ring-green-500 focus:ring-offset-0 focus:ring-2" onchange="updatePreview(); updateOrderSummary();" checked> <span>Wisząca</span></label><label class="flex items-center space-x-2 mt-1"><input type="radio" name="mugShelfMount" value="standing" class="rounded-full border-stone-300 text-green-600 shadow-sm focus:ring-green-500 focus:ring-offset-0 focus:ring-2" onchange="updatePreview(); updateOrderSummary();"><span>Stojąca</span></label>`; } if (shelfColorLabel) { if (shelfType === 'mug_shelf') shelfColorLabel.textContent = 'Kolor półek i przegródek:'; else shelfColorLabel.textContent = 'Kolor półek i podstaw:'; } updatePreview(); updateOrderSummary(); }
+        function handleMugShelfWidthChange() { if(dividersTopCheckbox) dividersTopCheckbox.checked = false; if(dividersMiddleCheckbox) dividersMiddleCheckbox.checked = false; if(dividersBottomCheckbox) dividersBottomCheckbox.checked = false; heightSelect.value = '40'; depthSelect.value = '10'; shelfCountSelect.value = '2'; updatePreview(); updateOrderSummary(); }
+        function restoreDimensionControls() { heightSelect.disabled = false; depthSelect.disabled = false; shelfCountSelect.disabled = false; heightLabel.classList.remove('text-stone-400'); depthLabel.classList.remove('text-stone-400'); widthSelect.innerHTML = ''; originalWidthOptions.forEach(opt => widthSelect.add(new Option(opt.text, opt.value))); widthSelect.removeEventListener('change', handleMugShelfWidthChange); widthSelect.addEventListener('change', checkCustomWidth); checkCustomWidth(); const currentHeight = heightSelect.value; heightSelect.innerHTML = ''; originalHeightOptions.forEach(opt => heightSelect.add(new Option(opt.text, opt.value))); if (Array.from(heightSelect.options).some(opt => opt.value === currentHeight)) heightSelect.value = currentHeight; }
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper not found (#threeJsCanvasWrapper)."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xf0f0f0); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(4, 5, 7); renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(container.clientWidth, container.clientHeight); container.innerHTML = ''; container.appendChild(renderer.domElement); scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1)); const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6); directionalLight.position.set(4, 8, 3); scene.add(directionalLight); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; window.addEventListener('resize', onWindowResize, false); updatePreview(); animate(); }
+        function onWindowResize() { const container = threeJsCanvasWrapper; if (!camera || !renderer || !container) return; camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); }
+        function animate() { requestAnimationFrame(animate); controls.update(); if(renderer && scene && camera) renderer.render(scene, camera); }
         function makeTextSprite(message, parameters = {}) { const fontface = parameters.fontface || "Arial"; const fontsize = parameters.fontsize || 64; const canvas = document.createElement("canvas"); const context = canvas.getContext("2d"); context.font = `bold ${fontsize}px ${fontface}`; const padding = 8; const textWidth = context.measureText(message).width; canvas.width = textWidth + padding * 2; canvas.height = fontsize * 1.2 + padding * 2; context.fillStyle = "rgba(255, 255, 255, 1)"; context.fillRect(0, 0, canvas.width, canvas.height); context.strokeStyle = "rgba(0, 0, 0, 1)"; context.lineWidth = 4; context.strokeRect(0, 0, canvas.width, canvas.height); context.fillStyle = "rgba(0, 0, 0, 1)"; context.font = `bold ${fontsize}px ${fontface}`; context.fillText(message, padding, fontsize + padding); const texture = new THREE.Texture(canvas); texture.needsUpdate = true; const spriteMaterial = new THREE.SpriteMaterial({ map: texture }); const sprite = new THREE.Sprite(spriteMaterial); sprite.scale.set(canvas.width / 100, canvas.height / 100, 1.0); return sprite; }
-
-        function updatePreview() {
-            if (!scene) return;
-            if (shelfGroup) scene.remove(shelfGroup);
-            shelfGroup = new THREE.Group();
-            shelfGroup.scale.set(1.2, 1.2, 1.2);
-            shelfGroup.position.y = -1;
-            scene.add(shelfGroup);
-
-            const width = parseFloat(getCurrentWidth()) / 10;
-            const height = parseFloat(heightSelect.value) / 10;
-            const depth = parseFloat(depthSelect.value) / 10;
-            const shelfCount = parseInt(shelfCountSelect.value);
-            const thickness = 0.18;
-
-            const previewMaterial = new THREE.MeshStandardMaterial(originalPreviewMaterialParams);
-
-            const shelfType = shelfTypeSelect.value;
-            const noTopShelf = document.getElementById("noTopShelf")?.checked;
-             const isStandingType = (shelfType === "standing") ||
-                                     (shelfType === "mug_shelf" && document.querySelector('input[name="mugShelfMount"]:checked')?.value === 'standing');
-            const noBottomShelf = (isStandingType && document.getElementById("noBottomShelf")?.checked);
-
-            let topPanel, bottomPanel;
-
-             if (!(isStandingType && noBottomShelf)) {
-                 const bottomGeometry = new THREE.BoxGeometry(width, thickness, depth);
-                 bottomPanel = new THREE.Mesh(bottomGeometry, previewMaterial);
-                 bottomPanel.position.set(0, -height / 2 + thickness / 2, 0);
-                 shelfGroup.add(bottomPanel);
-             }
-
-             if (!noTopShelf) {
-                 const topGeometry = new THREE.BoxGeometry(width, thickness, depth);
-                 topPanel = new THREE.Mesh(topGeometry, previewMaterial);
-                 topPanel.position.set(0, height / 2 - thickness / 2, 0);
-                 shelfGroup.add(topPanel);
-             }
-
-            const sideGeometry = new THREE.BoxGeometry(thickness, height, depth);
-            const leftSideMesh = new THREE.Mesh(sideGeometry, previewMaterial);
-            leftSideMesh.position.set(-width / 2 + thickness / 2, 0, 0);
-            shelfGroup.add(leftSideMesh);
-            const rightSideMesh = new THREE.Mesh(sideGeometry, previewMaterial);
-             rightSideMesh.position.set(width / 2 - thickness / 2, 0, 0);
-             shelfGroup.add(rightSideMesh);
-
-             const internalShelves = [];
-             if (!isNaN(shelfCount) && shelfCount > 0) {
-                 const topExists = !!topPanel;
-                 const bottomExists = !!bottomPanel;
-                 const topThicknessActual = topExists ? thickness : 0;
-                 const bottomThicknessActual = bottomExists ? thickness : 0;
-                 const totalAvailableHeight = height - topThicknessActual - bottomThicknessActual;
-
-                if (totalAvailableHeight > shelfCount * thickness) {
-                    const gap = (totalAvailableHeight - shelfCount * thickness) / (shelfCount + 1);
-                     let startY = bottomExists ? (-height / 2 + bottomThicknessActual) : (-height / 2);
-
-                    for (let i = 1; i <= shelfCount; i++) {
-                        const shelfY = startY + i * gap + (i - 0.5) * thickness;
-                        const shelfGeometry = new THREE.BoxGeometry(width - 2 * thickness, thickness, depth);
-                        const shelfMesh = new THREE.Mesh(shelfGeometry, previewMaterial);
-                         shelfMesh.position.set(0, shelfY, 0);
-                        shelfGroup.add(shelfMesh);
-                        internalShelves.push(shelfMesh);
-                    }
-                 } else { console.warn("Brak miejsca na półki wewnętrzne przy tych wymiarach i opcjach."); }
-            }
-
-            if (shelfType === 'mug_shelf') {
-                const addDividersTop = dividersTopCheckbox?.checked;
-                const addDividersMiddle = dividersMiddleCheckbox?.checked;
-                const addDividersBottom = dividersBottomCheckbox?.checked;
-                if ((addDividersTop || addDividersMiddle || addDividersBottom) && internalShelves.length === 2 && topPanel && bottomPanel) {
-                    const currentWidthCm = getCurrentWidth();
-                    const numDividers = (currentWidthCm == '60') ? 3 : 2;
-                    const innerWidth = width - 2 * thickness;
-                    const dividerSpacing = innerWidth / (numDividers + 1);
-                    const dividerThickness = thickness;
-                    const topPanelBottomY = topPanel.position.y - thickness / 2;
-                    const shelf2TopY = internalShelves[1].position.y + thickness / 2;
-                    const shelf2BottomY = internalShelves[1].position.y - thickness / 2;
-                    const shelf1TopY = internalShelves[0].position.y + thickness / 2;
-                    const shelf1BottomY = internalShelves[0].position.y - thickness / 2;
-                    const bottomPanelTopY = bottomPanel.position.y + thickness / 2;
-                    const levelHeightTop = Math.max(0, topPanelBottomY - shelf2TopY);
-                    const levelHeightMid = Math.max(0, shelf2BottomY - shelf1TopY);
-                    const levelHeightBot = Math.max(0, shelf1BottomY - bottomPanelTopY);
-                    const yCenterTop = shelf2TopY + levelHeightTop / 2;
-                    const yCenterMid = shelf1TopY + levelHeightMid / 2;
-                    const yCenterBot = bottomPanelTopY + levelHeightBot / 2;
-                    const drawDividers = (yCenter, levelH) => {
-                         if (levelH <= 0) { console.warn("Niepoprawna wysokość poziomu dla przegródek:", levelH); return; }
-                         const dividerGeometry = new THREE.BoxGeometry(dividerThickness, levelH, depth);
-                         for (let i = 1; i <= numDividers; i++) {
-                             const xPos = -innerWidth / 2 + i * dividerSpacing;
-                             const dividerMesh = new THREE.Mesh(dividerGeometry, previewMaterial);
-                             dividerMesh.position.set(xPos, yCenter, 0);
-                             shelfGroup.add(dividerMesh);
-                         }
-                     };
-                    if (addDividersTop && levelHeightTop > 0) drawDividers(yCenterTop, levelHeightTop);
-                    if (addDividersMiddle && levelHeightMid > 0) drawDividers(yCenterMid, levelHeightMid);
-                    if (addDividersBottom && levelHeightBot > 0) drawDividers(yCenterBot, levelHeightBot);
-                } else if ((addDividersTop || addDividersMiddle || addDividersBottom)) {
-                    console.warn("Nie można narysować przegródek - wymagane są 2 półki wewnętrzne oraz panel górny i dolny w modelu.");
-                }
-            }
-
-
-            shelfGroup.children.filter(child => child instanceof THREE.Sprite).forEach(sprite => {
-                 if (sprite.material.map) sprite.material.map.dispose();
-                 sprite.material.dispose();
-                 shelfGroup.remove(sprite);
-             });
-
-             const labelOffset = 0.5;
-             const widthText = makeTextSprite(getCurrentWidth() + " cm", { fontsize: 32 });
-             widthText.position.set(0, height / 2 + labelOffset, 0);
-             shelfGroup.add(widthText);
-             const heightText = makeTextSprite(heightSelect.value + " cm", { fontsize: 40 });
-             heightText.position.set(-width / 2 - labelOffset - thickness, 0, 0);
-             shelfGroup.add(heightText);
-             const depthText = makeTextSprite(depthSelect.value + " cm", { fontsize: 32 });
-             depthText.position.set(width / 2 + labelOffset / 2, -height / 2 - labelOffset, depth / 2);
-             shelfGroup.add(depthText);
-
-             if (isStandingType) { }
-        }
-        // --- Koniec logiki 3D ---
-
-        // Pozostały JavaScript konfiguratora
-        function computePriceDetailed() {
-            const shelfType = shelfTypeSelect.value;
-            const height = heightSelect.value;
-            const depth = depthSelect.value;
-            const shelfCountVal = shelfCountSelect.value;
-             if (shelfType === 'mug_shelf') {
-                 const widthVal = widthSelect.value;
-                 const basePrice = mugShelfPricing[widthVal];
-                 if (basePrice === undefined) {
-                     console.warn(`Brak ceny dla półki na kubki o szerokości ${widthVal} cm.`);
-                     return null;
-                 }
-                 let extraFee = 0;
-                 return { base: basePrice, extra: extraFee, deduction: 0, total: basePrice + extraFee };
-             }
-            let basePrice = null;
-            let extraFee = 0;
-            let baseWidthKey;
-            const isCustomWidth = widthSelect.value === 'custom';
-            if (isCustomWidth) {
-                const customWidth = parseInt(getCurrentWidth());
-                if (isNaN(customWidth) || customWidth < 35 || customWidth > 59) return null;
-                baseWidthKey = customWidth < 39 ? "34" : customWidth < 47 ? "44" : customWidth < 54 ? "50" : "60";
-                extraFee = 50;
-            } else {
-                baseWidthKey = getCurrentWidth();
-            }
-            if (pricing[baseWidthKey]?.[height]?.[depth]?.[shelfCountVal] !== undefined) {
-                basePrice = pricing[baseWidthKey][height][depth][shelfCountVal];
-            } else if (shelfCountVal === '0' && pricing[baseWidthKey]?.[height]?.[depth]) {
-                const availableShelfCounts = Object.keys(pricing[baseWidthKey][height][depth]).map(Number).filter(n => n > 0);
-                if (availableShelfCounts.length > 0) {
-                    const minShelfCount = Math.min(...availableShelfCounts);
-                    basePrice = pricing[baseWidthKey][height][depth][minShelfCount.toString()];
-                 } else {
-                    console.warn(`Brak cen bazowych (dla półek > 0) przy ${baseWidthKey}x${height}x${depth}`);
-                    return null;
-                 }
-             } else {
-                console.warn(`Brak ceny dla ${baseWidthKey}x${height}x${depth} z ${shelfCountVal} półkami.`);
-                return null;
-            }
-            if (basePrice === null) return null;
-            let deduction = 0;
-            if (document.getElementById('noTopShelf')?.checked) deduction += 10;
-            if (shelfType === 'standing' && document.getElementById('noBottomShelf')?.checked) deduction += 10;
-            const totalPrice = basePrice + extraFee - deduction;
-            return { base: basePrice, extra: extraFee, deduction: deduction, total: Math.max(50, totalPrice) };
-        }
-
-        function generateOrderCode() {
-            const parts = [];
-            const shelfType = shelfTypeSelect.value;
-            const typeCode = typeValueToCode[shelfType] || '?';
-            parts.push(`T:${typeCode}`);
-            parts.push(`W:${getCurrentWidth()}`);
-            if (shelfType !== 'mug_shelf') {
-                parts.push(`H:${heightSelect.value}`);
-                parts.push(`D:${depthSelect.value}`);
-                parts.push(`SC:${shelfCountSelect.value}`);
-            }
-            const sideColorVal = sideColorSelect.value || '';
-            const shelfColorVal = shelfColorSelect.value || '';
-            parts.push(`C1:${colorValueToCode[sideColorVal] || '-'}`);
-            parts.push(`C2:${colorValueToCode[shelfColorVal] || '-'}`);
-            const options = [];
-            if (shelfType === 'mug_shelf') {
-                const selectedMount = document.querySelector('input[name="mugShelfMount"]:checked')?.value;
-                if (selectedMount) {
-                    options.push(`MSM:${mountValueToCode[selectedMount] || '-'}`);
-                }
-                if (dividersTopCheckbox?.checked) options.push("divT");
-                if (dividersMiddleCheckbox?.checked) options.push("divM");
-                if (dividersBottomCheckbox?.checked) options.push("divB");
-            } else {
-                if (document.getElementById("noTopShelf")?.checked) options.push("noT");
-                if (shelfType === "standing" && document.getElementById("noBottomShelf")?.checked) options.push("noB");
-            }
-            parts.push(`O:${options.length > 0 ? options.join('-') : '-'}`);
-            return parts.join('|');
-        }
-
-         function loadConfigurationFromCode() {
-             const code = loadOrderCodeInput.value.trim();
-             if (!code) {
-                 alert("Proszę wkleić kod konfiguracji.");
-                 return;
-             }
-             const params = {};
-             const options = [];
-             try {
-                 code.split('|').forEach(part => {
-                     const separatorIndex = part.indexOf(':');
-                     if (separatorIndex === -1) throw new Error("Nieprawidłowy format części kodu: " + part);
-                     const key = part.substring(0, separatorIndex);
-                     const value = part.substring(separatorIndex + 1);
-                     if (key === 'O') {
-                         if (value !== '-') {
-                             value.split('-').forEach(opt => {
-                                 if (opt.includes(':')) {
-                                     const [optKey, optValue] = opt.split(':');
-                                     params[optKey] = optValue;
-                                 } else {
-                                     options.push(opt);
-                                 }
-                             });
-                         }
-                     } else {
-                         params[key] = value;
-                     }
-                 });
-                 if (!params['T'] || !params['W'] || !params['C1'] || !params['C2']) {
-                      throw new Error("Kod nie zawiera wszystkich podstawowych parametrów (T, W, C1, C2).");
-                 }
-                 const loadedShelfType = typeCodeToValue[params['T']];
-                 if (!loadedShelfType || !Array.from(shelfTypeSelect.options).some(opt => opt.value === loadedShelfType)) {
-                      throw new Error(`Nieznany lub nieprawidłowy typ półki w kodzie: ${params['T']}`);
-                 }
-                 shelfTypeSelect.value = loadedShelfType;
-                 handleShelfTypeChange();
-                 let loadedHeight, loadedDepth, loadedShelfCount;
-                 if (loadedShelfType === 'mug_shelf') {
-                     loadedHeight = '40'; loadedDepth = '10'; loadedShelfCount = '2';
-                      if (params['H'] && params['H'] !== loadedHeight) console.warn("Kod zawiera nieoczekiwany parametr H dla półki na kubki.");
-                      if (params['D'] && params['D'] !== loadedDepth) console.warn("Kod zawiera nieoczekiwany parametr D dla półki na kubki.");
-                      if (params['SC'] && params['SC'] !== loadedShelfCount) console.warn("Kod zawiera nieoczekiwany parametr SC dla półki na kubki.");
-                 } else {
-                     if (!params['H'] || !params['D'] || !params['SC']) {
-                          throw new Error("Kod dla tego typu półki nie zawiera wymaganych parametrów (H, D, SC).");
-                     }
-                     loadedHeight = params['H']; loadedDepth = params['D']; loadedShelfCount = params['SC'];
-                 }
-                 const widthValue = params['W'];
-                 if (originalWidthOptions.some(opt => opt.value === widthValue)) {
-                      if (Array.from(widthSelect.options).some(opt => opt.value === widthValue)) {
-                          widthSelect.value = widthValue;
-                      } else {
-                           throw new Error(`Szerokość ${widthValue} jest niedozwolona dla typu półki ${loadedShelfType}.`);
-                      }
-                 } else {
-                     const customW = parseInt(widthValue);
-                     if (!isNaN(customW) && customW >= 35 && customW <= 59) {
-                         if (Array.from(widthSelect.options).some(opt => opt.value === 'custom')) {
-                             widthSelect.value = 'custom'; customWidthInput.value = customW;
-                         } else { throw new Error(`Opcja szerokości niestandardowej niedostępna dla typu ${loadedShelfType}.`); }
-                     } else { throw new Error(`Nieprawidłowa szerokość: ${widthValue}`); }
-                 }
-                  if (loadedShelfType === 'mug_shelf') { handleMugShelfWidthChange(); }
-                  else { checkCustomWidth(); }
-                 if (!heightSelect.disabled) {
-                     if (Array.from(heightSelect.options).some(opt => opt.value === loadedHeight)) { heightSelect.value = loadedHeight; }
-                     else { throw new Error(`Nieprawidłowa lub niedostępna wysokość: ${loadedHeight}`); }
-                 }
-                  if (loadedShelfType !== 'mug_shelf') { updateDepthOptions(); updateShelfCountOptions(); }
-                 if (!depthSelect.disabled) {
-                      if (Array.from(depthSelect.options).some(opt => opt.value === loadedDepth)) { depthSelect.value = loadedDepth; }
-                      else { console.warn(`Głębokość ${loadedDepth} niedostępna dla tej konfiguracji. Ustawiono domyślną.`); }
-                 }
-                 if (!shelfCountSelect.disabled) {
-                      if (Array.from(shelfCountSelect.options).some(opt => opt.value === loadedShelfCount)) { shelfCountSelect.value = loadedShelfCount; }
-                      else { console.warn(`Liczba półek ${loadedShelfCount} niedostępna dla tej konfiguracji. Ustawiono domyślną.`); }
-                 }
-                 const sideColorCode = colorCodeToValue[params['C1']];
-                 const shelfColorCode = colorCodeToValue[params['C2']];
-                 if (sideColorCode !== undefined && Array.from(sideColorSelect.options).some(opt => opt.value === sideColorCode)) { sideColorSelect.value = sideColorCode; }
-                 else { sideColorSelect.value = ''; console.warn(`Nieznany kod koloru boków: ${params['C1']}`); }
-                 if (shelfColorCode !== undefined && Array.from(shelfColorSelect.options).some(opt => opt.value === shelfColorCode)) { shelfColorSelect.value = shelfColorCode; }
-                 else { shelfColorSelect.value = ''; console.warn(`Nieznany kod koloru półek: ${params['C2']}`); }
-                 updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay');
-                 updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay');
-                 const noTopCheckbox = document.getElementById('noTopShelf');
-                 if (noTopCheckbox) noTopCheckbox.checked = options.includes('noT');
-                 const noBottomCheckbox = document.getElementById('noBottomShelf');
-                 if (noBottomCheckbox) noBottomCheckbox.checked = options.includes('noB');
-                 if (dividersTopCheckbox) dividersTopCheckbox.checked = options.includes('divT');
-                 if (dividersMiddleCheckbox) dividersMiddleCheckbox.checked = options.includes('divM');
-                 if (dividersBottomCheckbox) dividersBottomCheckbox.checked = options.includes('divB');
-                  if (loadedShelfType === 'mug_shelf' && params['MSM']) {
-                       const loadedMountValue = mountCodeToValue[params['MSM']];
-                       const mountRadio = document.querySelector(`input[name="mugShelfMount"][value="${loadedMountValue}"]`);
-                       if (mountRadio) { mountRadio.checked = true; }
-                       else { console.warn(`Nieznana wartość montażu półki na kubki: ${params['MSM']}. Ustawiono domyślną.`); }
-                  }
-                 handleDimensionChange();
-                 alert("Konfiguracja została wczytana!");
-                 loadOrderCodeInput.value = '';
-             } catch (error) {
-                 console.error("Błąd podczas wczytywania konfiguracji:", error);
-                 alert(`Nie udało się wczytać konfiguracji. Błąd: ${error.message}\nSprawdź poprawność kodu.`);
-             }
-         }
-
-        function updateOrderSummary() {
-             const shelfColorSummaryLabel = document.getElementById('shelfColorSummaryLabel');
-             const currentShelfType = shelfTypeSelect.value;
-
-             if (shelfColorSummaryLabel) {
-                 if (currentShelfType === 'mug_shelf') {
-                     shelfColorSummaryLabel.textContent = 'Kolor półek i przegródek:';
-                 } else {
-                     shelfColorSummaryLabel.textContent = 'Kolor półek i podstaw:';
-                 }
-             }
-
-             document.getElementById("shelfTypeSummary").textContent = currentShelfType && shelfTypeSelect.selectedIndex >= 0 ? shelfTypeSelect.options[shelfTypeSelect.selectedIndex].text : "nie wybrano";
-             const mugShelfMountItem = document.getElementById("mugShelfMountSummaryItem");
-             const mugShelfMountSummary = document.getElementById("mugShelfMountSummary");
-             if (currentShelfType === 'mug_shelf') {
-                 const selectedMountRadio = document.querySelector('input[name="mugShelfMount"]:checked');
-                 mugShelfMountSummary.textContent = selectedMountRadio ? (selectedMountRadio.value === 'hanging' ? 'Wisząca' : 'Stojąca') : 'nie wybrano';
-                 mugShelfMountItem.style.display = 'flex';
-             } else {
-                 mugShelfMountItem.style.display = 'none';
-             }
-             document.getElementById("widthSummary").textContent = getCurrentWidth() + " cm";
-             document.getElementById("heightSummary").textContent = heightSelect.value + " cm";
-             document.getElementById("depthSummary").textContent = depthSelect.value + " cm";
-             document.getElementById("sideColorSummary").textContent = sideColorSelect.options[sideColorSelect.selectedIndex]?.text || "nie wybrano";
-             document.getElementById("shelfColorSummary").textContent = shelfColorSelect.options[shelfColorSelect.selectedIndex]?.text || "nie wybrano";
-             document.getElementById("shelfCountSummary").textContent = shelfCountSelect.value !== '0' && shelfCountSelect.selectedIndex >= 0 ? shelfCountSelect.options[shelfCountSelect.selectedIndex].text : 'brak półek';
-             const h = parseFloat(heightSelect.value);
-             const sc = parseInt(shelfCountSelect.value);
-             const t = 1.8;
-             const nT = document.getElementById('noTopShelf')?.checked;
-             const isStandingType = (currentShelfType === "standing") || (currentShelfType === "mug_shelf" && document.querySelector('input[name="mugShelfMount"]:checked')?.value === 'standing');
-             const nB = (isStandingType && document.getElementById('noBottomShelf')?.checked);
-             let gT = "n/d";
-               const topExists = !nT;
-               const bottomExists = !(isStandingType && nB);
-               const topThickness = topExists ? t : 0;
-               const bottomThickness = bottomExists ? t : 0;
-               const totalAvailableHeight = h - topThickness - bottomThickness;
-             if (!isNaN(sc) && sc >= 0) {
-                 const totalShelvesThickness = sc * t;
-                 if (totalAvailableHeight >= totalShelvesThickness) {
-                     const freeSpace = totalAvailableHeight - totalShelvesThickness;
-                     const gapsCount = sc + 1;
-                     gT = (freeSpace / gapsCount).toFixed(1) + " cm";
-                 } else { gT = "za mało miejsca"; }
-             } else { gT = "błąd"; }
-             document.getElementById("gapSummary").textContent = gT;
-             document.getElementById("gapSummaryDisplay").textContent = gT;
-             const o = [];
-             if (currentShelfType === 'mug_shelf') {
-                 const dividersSelected = [];
-                 if (dividersTopCheckbox?.checked) dividersSelected.push("góra");
-                 if (dividersMiddleCheckbox?.checked) dividersSelected.push("środek");
-                 if (dividersBottomCheckbox?.checked) dividersSelected.push("dół");
-                 if (dividersSelected.length > 0) { o.push("Przegródki: " + dividersSelected.join(", ")); }
-             } else {
-                 if (nT) o.push("bez górnej półki");
-                 if (currentShelfType === 'standing' && nB) o.push("bez dolnej półki (podstawy)");
-             }
-             document.getElementById("extraOptionsSummary").textContent = o.length ? o.join(" / ") : "standardowa";
-             const isComplete = currentShelfType && sideColorSelect.value && shelfColorSelect.value;
-             const pH = document.getElementById("priceHint");
-             const orderActionsWrapper = document.getElementById("orderActionsWrapper");
-             const oCW = document.getElementById("orderCodeWindow");
-             const pSE = document.getElementById("priceSummary");
-             const oCVE = document.getElementById("orderCodeVisible");
-             const oCI = document.getElementById("orderCodeIcon");
-             if (oCI) oCI.classList.remove('icon-bounce');
-             if (isComplete) {
-                 const pD = computePriceDetailed();
-                 if (pD !== null) {
-                     pSE.textContent = pD.total + " zł";
-                     const c = generateOrderCode();
-                     oCVE.textContent = c;
-                     pH.style.display = "none";
-                     orderActionsWrapper.style.display = "flex";
-                     if (oCI) oCI.classList.add('icon-bounce');
-                 } else {
-                     pSE.textContent = "N/D";
-                     oCVE.textContent = "NIEDOSTĘPNA";
-                     pH.textContent = "Wybrana konfiguracja jest niedostępna.";
-                     pH.style.display = "block";
-                     orderActionsWrapper.style.display = "none";
-                     oCW.style.display = "block";
-                 }
-             } else {
-                 pSE.textContent = "";
-                 oCVE.textContent = "";
-                 pH.textContent = "Wybierz rodzaj półki i kolory, aby zobaczyć cenę.";
-                 pH.style.display = "block";
-                 orderActionsWrapper.style.display = "none";
-             }
-          }
-
-        function updateSwatchDisplay(selectElementId, swatchDisplayId) {
-            const selectElement = document.getElementById(selectElementId);
-            const swatchDisplay = document.getElementById(swatchDisplayId);
-            if (!selectElement || !swatchDisplay) return;
-            const selectedOption = selectElement.options[selectElement.selectedIndex];
-            const color = selectedOption ? selectedOption.dataset.color : null;
-            if (color) {
-                swatchDisplay.style.backgroundColor = color;
-                swatchDisplay.style.display = 'inline-block';
-                 if (color.toUpperCase() === '#FFFFFF') { swatchDisplay.classList.add('swatch-white-display'); }
-                 else { swatchDisplay.classList.remove('swatch-white-display'); }
-            } else {
-                swatchDisplay.style.backgroundColor = '#E5E7EB';
-                swatchDisplay.classList.remove('swatch-white-display');
-             }
-         }
-
+        function updatePreview() { if (!scene) return; if (shelfGroup) scene.remove(shelfGroup); shelfGroup = new THREE.Group(); shelfGroup.scale.set(1.2, 1.2, 1.2); shelfGroup.position.y = -1; scene.add(shelfGroup); const width = parseFloat(getCurrentWidth()) / 10; const height = parseFloat(heightSelect.value) / 10; const depth = parseFloat(depthSelect.value) / 10; const shelfCount = parseInt(shelfCountSelect.value); const thickness = 0.18; const previewMaterial = new THREE.MeshStandardMaterial(originalPreviewMaterialParams); const shelfType = shelfTypeSelect.value; const noTopShelf = document.getElementById("noTopShelf")?.checked; const isStandingType = (shelfType === "standing") || (shelfType === "mug_shelf" && document.querySelector('input[name="mugShelfMount"]:checked')?.value === 'standing'); const noBottomShelf = (isStandingType && document.getElementById("noBottomShelf")?.checked); let topPanel, bottomPanel; if (!(isStandingType && noBottomShelf)) { const bottomGeometry = new THREE.BoxGeometry(width, thickness, depth); bottomPanel = new THREE.Mesh(bottomGeometry, previewMaterial); bottomPanel.position.set(0, -height / 2 + thickness / 2, 0); shelfGroup.add(bottomPanel); } if (!noTopShelf) { const topGeometry = new THREE.BoxGeometry(width, thickness, depth); topPanel = new THREE.Mesh(topGeometry, previewMaterial); topPanel.position.set(0, height / 2 - thickness / 2, 0); shelfGroup.add(topPanel); } const sideGeometry = new THREE.BoxGeometry(thickness, height, depth); const leftSideMesh = new THREE.Mesh(sideGeometry, previewMaterial); leftSideMesh.position.set(-width / 2 + thickness / 2, 0, 0); shelfGroup.add(leftSideMesh); const rightSideMesh = new THREE.Mesh(sideGeometry, previewMaterial); rightSideMesh.position.set(width / 2 - thickness / 2, 0, 0); shelfGroup.add(rightSideMesh); const internalShelves = []; if (!isNaN(shelfCount) && shelfCount > 0) { const topExists = !!topPanel; const bottomExists = !!bottomPanel; const topThicknessActual = topExists ? thickness : 0; const bottomThicknessActual = bottomExists ? thickness : 0; const totalAvailableHeight = height - topThicknessActual - bottomThicknessActual; if (totalAvailableHeight > shelfCount * thickness) { const gap = (totalAvailableHeight - shelfCount * thickness) / (shelfCount + 1); let startY = bottomExists ? (-height / 2 + bottomThicknessActual) : (-height / 2); for (let i = 1; i <= shelfCount; i++) { const shelfY = startY + i * gap + (i - 0.5) * thickness; const shelfGeometry = new THREE.BoxGeometry(width - 2 * thickness, thickness, depth); const shelfMesh = new THREE.Mesh(shelfGeometry, previewMaterial); shelfMesh.position.set(0, shelfY, 0); shelfGroup.add(shelfMesh); internalShelves.push(shelfMesh); } } else { console.warn("Brak miejsca na półki wewnętrzne."); } } if (shelfType === 'mug_shelf') { const addDividersTop = dividersTopCheckbox?.checked; const addDividersMiddle = dividersMiddleCheckbox?.checked; const addDividersBottom = dividersBottomCheckbox?.checked; if ((addDividersTop || addDividersMiddle || addDividersBottom) && internalShelves.length === 2 && topPanel && bottomPanel) { const currentWidthCm = getCurrentWidth(); const numDividers = (currentWidthCm == '60') ? 3 : 2; const innerWidth = width - 2 * thickness; const dividerSpacing = innerWidth / (numDividers + 1); const dividerThickness = thickness; const topPanelBottomY = topPanel.position.y - thickness / 2; const shelf2TopY = internalShelves[1].position.y + thickness / 2; const shelf2BottomY = internalShelves[1].position.y - thickness / 2; const shelf1TopY = internalShelves[0].position.y + thickness / 2; const shelf1BottomY = internalShelves[0].position.y - thickness / 2; const bottomPanelTopY = bottomPanel.position.y + thickness / 2; const levelHeightTop = Math.max(0, topPanelBottomY - shelf2TopY); const levelHeightMid = Math.max(0, shelf2BottomY - shelf1TopY); const levelHeightBot = Math.max(0, shelf1BottomY - bottomPanelTopY); const yCenterTop = shelf2TopY + levelHeightTop / 2; const yCenterMid = shelf1TopY + levelHeightMid / 2; const yCenterBot = bottomPanelTopY + levelHeightBot / 2; const drawDividers = (yCenter, levelH) => { if (levelH <= 0) { console.warn("Niepoprawna wysokość poziomu dla przegródek:", levelH); return; } const dividerGeometry = new THREE.BoxGeometry(dividerThickness, levelH, depth); for (let i = 1; i <= numDividers; i++) { const xPos = -innerWidth / 2 + i * dividerSpacing; const dividerMesh = new THREE.Mesh(dividerGeometry, previewMaterial); dividerMesh.position.set(xPos, yCenter, 0); shelfGroup.add(dividerMesh); } }; if (addDividersTop && levelHeightTop > 0) drawDividers(yCenterTop, levelHeightTop); if (addDividersMiddle && levelHeightMid > 0) drawDividers(yCenterMid, levelHeightMid); if (addDividersBottom && levelHeightBot > 0) drawDividers(yCenterBot, levelHeightBot); } else if ((addDividersTop || addDividersMiddle || addDividersBottom)) { console.warn("Nie można narysować przegródek - wymagane są 2 półki wewnętrzne oraz panel górny i dolny."); } } shelfGroup.children.filter(child => child instanceof THREE.Sprite).forEach(sprite => { if (sprite.material.map) sprite.material.map.dispose(); sprite.material.dispose(); shelfGroup.remove(sprite); }); const labelOffset = 0.5; const widthText = makeTextSprite(getCurrentWidth() + " cm", { fontsize: 32 }); widthText.position.set(0, height / 2 + labelOffset, 0); shelfGroup.add(widthText); const heightText = makeTextSprite(heightSelect.value + " cm", { fontsize: 40 }); heightText.position.set(-width / 2 - labelOffset - thickness, 0, 0); shelfGroup.add(heightText); const depthText = makeTextSprite(depthSelect.value + " cm", { fontsize: 32 }); depthText.position.set(width / 2 + labelOffset / 2, -height / 2 - labelOffset, depth / 2); shelfGroup.add(depthText); }
+        function computePriceDetailed() { const shelfType = shelfTypeSelect.value; const height = heightSelect.value; const depth = depthSelect.value; const shelfCountVal = shelfCountSelect.value; if (shelfType === 'mug_shelf') { const widthVal = widthSelect.value; const basePrice = mugShelfPricing[widthVal]; if (basePrice === undefined) { console.warn(`Brak ceny dla półki na kubki o szerokości ${widthVal} cm.`); return null; } let extraFee = 0; return { base: basePrice, extra: extraFee, deduction: 0, total: basePrice + extraFee }; } let basePrice = null; let extraFee = 0; let baseWidthKey; const isCustomWidth = widthSelect.value === 'custom'; if (isCustomWidth) { const customWidth = parseInt(getCurrentWidth()); if (isNaN(customWidth) || customWidth < 35 || customWidth > 59) return null; baseWidthKey = customWidth < 39 ? "34" : customWidth < 47 ? "44" : customWidth < 54 ? "50" : "60"; extraFee = 50; } else { baseWidthKey = getCurrentWidth(); } if (pricing[baseWidthKey]?.[height]?.[depth]?.[shelfCountVal] !== undefined) { basePrice = pricing[baseWidthKey][height][depth][shelfCountVal]; } else if (shelfCountVal === '0' && pricing[baseWidthKey]?.[height]?.[depth]) { const availableShelfCounts = Object.keys(pricing[baseWidthKey][height][depth]).map(Number).filter(n => n > 0); if (availableShelfCounts.length > 0) { const minShelfCount = Math.min(...availableShelfCounts); basePrice = pricing[baseWidthKey][height][depth][minShelfCount.toString()]; } else { console.warn(`Brak cen bazowych (dla półek > 0) przy ${baseWidthKey}x${height}x${depth}`); return null; } } else { console.warn(`Brak ceny dla ${baseWidthKey}x${height}x${depth} z ${shelfCountVal} półkami.`); return null; } if (basePrice === null) return null; let deduction = 0; if (document.getElementById('noTopShelf')?.checked) deduction += 10; if (shelfType === 'standing' && document.getElementById('noBottomShelf')?.checked) deduction += 10; const totalPrice = basePrice + extraFee - deduction; return { base: basePrice, extra: extraFee, deduction: deduction, total: Math.max(50, totalPrice) }; }
+        function generateOrderCode() { const parts = []; const shelfType = shelfTypeSelect.value; const typeCode = typeValueToCode[shelfType] || '?'; parts.push(`T:${typeCode}`); parts.push(`W:${getCurrentWidth()}`); if (shelfType !== 'mug_shelf') { parts.push(`H:${heightSelect.value}`); parts.push(`D:${depthSelect.value}`); parts.push(`SC:${shelfCountSelect.value}`); } const sideColorVal = sideColorSelect.value || ''; const shelfColorVal = shelfColorSelect.value || ''; parts.push(`C1:${colorValueToCode[sideColorVal] || '-'}`); parts.push(`C2:${colorValueToCode[shelfColorVal] || '-'}`); const options = []; if (shelfType === 'mug_shelf') { const selectedMount = document.querySelector('input[name="mugShelfMount"]:checked')?.value; if (selectedMount) options.push(`MSM:${mountValueToCode[selectedMount] || '-'}`); if (dividersTopCheckbox?.checked) options.push("divT"); if (dividersMiddleCheckbox?.checked) options.push("divM"); if (dividersBottomCheckbox?.checked) options.push("divB"); } else { if (document.getElementById("noTopShelf")?.checked) options.push("noT"); if (shelfType === "standing" && document.getElementById("noBottomShelf")?.checked) options.push("noB"); } parts.push(`O:${options.length > 0 ? options.join('-') : '-'}`); return parts.join('|'); }
+        function loadConfigurationFromCode() { const code = loadOrderCodeInput.value.trim(); if (!code) { alert("Proszę wkleić kod konfiguracji."); return; } const params = {}; const options = []; try { code.split('|').forEach(part => { const separatorIndex = part.indexOf(':'); if (separatorIndex === -1) throw new Error("Nieprawidłowy format części kodu: " + part); const key = part.substring(0, separatorIndex); const value = part.substring(separatorIndex + 1); if (key === 'O') { if (value !== '-') { value.split('-').forEach(opt => { if (opt.includes(':')) { const [optKey, optValue] = opt.split(':'); params[optKey] = optValue; } else { options.push(opt); } }); } } else { params[key] = value; } }); if (!params['T'] || !params['W'] || !params['C1'] || !params['C2']) { throw new Error("Kod nie zawiera wszystkich podstawowych parametrów (T, W, C1, C2)."); } const loadedShelfType = typeCodeToValue[params['T']]; if (!loadedShelfType || !Array.from(shelfTypeSelect.options).some(opt => opt.value === loadedShelfType)) { throw new Error(`Nieznany lub nieprawidłowy typ półki w kodzie: ${params['T']}`); } shelfTypeSelect.value = loadedShelfType; handleShelfTypeChange(); let loadedHeight, loadedDepth, loadedShelfCount; if (loadedShelfType === 'mug_shelf') { loadedHeight = '40'; loadedDepth = '10'; loadedShelfCount = '2'; } else { if (!params['H'] || !params['D'] || !params['SC']) { throw new Error("Kod dla tego typu półki nie zawiera wymaganych parametrów (H, D, SC)."); } loadedHeight = params['H']; loadedDepth = params['D']; loadedShelfCount = params['SC']; } const widthValue = params['W']; if (originalWidthOptions.some(opt => opt.value === widthValue)) { if (Array.from(widthSelect.options).some(opt => opt.value === widthValue)) { widthSelect.value = widthValue; checkCustomWidth(); } else { throw new Error(`Szerokość ${widthValue} jest niedozwolona dla typu półki ${loadedShelfType}.`); } } else { const customW = parseInt(widthValue); if (!isNaN(customW) && customW >= 35 && customW <= 59) { if (Array.from(widthSelect.options).some(opt => opt.value === 'custom')) { widthSelect.value = 'custom'; customWidthInput.value = customW; checkCustomWidth(); } else { throw new Error(`Opcja szerokości niestandardowej jest niedostępna dla typu półki ${loadedShelfType}.`); } } else { throw new Error(`Nieprawidłowa lub niedozwolona szerokość w kodzie: ${widthValue}`); } } if (!heightSelect.disabled) { if (Array.from(heightSelect.options).some(opt => opt.value === loadedHeight)) { heightSelect.value = loadedHeight; } else { throw new Error(`Nieprawidłowa lub niedostępna wysokość w kodzie: ${loadedHeight}`); } } if (loadedShelfType !== 'mug_shelf') { updateDepthOptions(); updateShelfCountOptions(); } if (!depthSelect.disabled) { if (Array.from(depthSelect.options).some(opt => opt.value === loadedDepth)) { depthSelect.value = loadedDepth; } else { console.warn(`Głębokość ${loadedDepth} jest niedostępna dla tej konfiguracji. Ustawiono domyślną.`); } } if (!shelfCountSelect.disabled) { if (Array.from(shelfCountSelect.options).some(opt => opt.value === loadedShelfCount)) { shelfCountSelect.value = loadedShelfCount; } else { console.warn(`Liczba półek ${loadedShelfCount} jest niedostępna dla tej konfiguracji. Ustawiono domyślną.`); } } const sideColorCode = colorCodeToValue[params['C1']]; const shelfColorCode = colorCodeToValue[params['C2']]; if (sideColorCode !== undefined && Array.from(sideColorSelect.options).some(opt => opt.value === sideColorCode)) { sideColorSelect.value = sideColorCode; } else { sideColorSelect.value = ''; console.warn(`Nieznany lub nieprawidłowy kod koloru boków: ${params['C1']}`); } if (shelfColorCode !== undefined && Array.from(shelfColorSelect.options).some(opt => opt.value === shelfColorCode)) { shelfColorSelect.value = shelfColorCode; } else { shelfColorSelect.value = ''; console.warn(`Nieznany lub nieprawidłowy kod koloru półek: ${params['C2']}`); } updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay'); updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay'); const noTopCheckbox = document.getElementById('noTopShelf'); if (noTopCheckbox) noTopCheckbox.checked = options.includes('noT'); const noBottomCheckbox = document.getElementById('noBottomShelf'); if (noBottomCheckbox) noBottomCheckbox.checked = options.includes('noB'); if (dividersTopCheckbox) dividersTopCheckbox.checked = options.includes('divT'); if (dividersMiddleCheckbox) dividersMiddleCheckbox.checked = options.includes('divM'); if (dividersBottomCheckbox) dividersBottomCheckbox.checked = options.includes('divB'); if (loadedShelfType === 'mug_shelf' && params['MSM']) { const loadedMountValue = mountCodeToValue[params['MSM']]; const mountRadio = document.querySelector(`input[name="mugShelfMount"][value="${loadedMountValue}"]`); if (mountRadio) { mountRadio.checked = true; } else { console.warn(`Nieznana wartość montażu półki na kubki: ${params['MSM']}. Ustawiono domyślną (wisząca).`); document.querySelector('input[name="mugShelfMount"][value="hanging"]').checked = true; } } handleDimensionChange(); alert("Konfiguracja została wczytana!"); loadOrderCodeInput.value = ''; } catch (error) { console.error("Błąd podczas wczytywania konfiguracji:", error); alert(`Nie udało się wczytać konfiguracji. Błąd: ${error.message}\nSprawdź poprawność kodu.`); } }
+        function updateOrderSummary() { const shelfColorSummaryLabel = document.getElementById('shelfColorSummaryLabel'); const currentShelfType = shelfTypeSelect.value; if (shelfColorSummaryLabel) { if (currentShelfType === 'mug_shelf') shelfColorSummaryLabel.textContent = 'Kolor półek i przegródek:'; else shelfColorSummaryLabel.textContent = 'Kolor półek i podstaw:'; } document.getElementById("shelfTypeSummary").textContent = currentShelfType && shelfTypeSelect.selectedIndex >= 0 ? shelfTypeSelect.options[shelfTypeSelect.selectedIndex].text : "-- Wybierz --"; const mugShelfMountItem = document.getElementById("mugShelfMountSummaryItem"); const mugShelfMountSummary = document.getElementById("mugShelfMountSummary"); if (currentShelfType === 'mug_shelf') { const selectedMountRadio = document.querySelector('input[name="mugShelfMount"]:checked'); mugShelfMountSummary.textContent = selectedMountRadio ? (selectedMountRadio.value === 'hanging' ? 'Wisząca' : 'Stojąca') : 'nie wybrano'; mugShelfMountItem.style.display = 'flex'; } else { mugShelfMountItem.style.display = 'none'; } document.getElementById("widthSummary").textContent = getCurrentWidth() + " cm"; document.getElementById("heightSummary").textContent = heightSelect.value + " cm"; document.getElementById("depthSummary").textContent = depthSelect.value + " cm"; document.getElementById("sideColorSummary").textContent = sideColorSelect.options[sideColorSelect.selectedIndex]?.text || "nie wybrano"; document.getElementById("shelfColorSummary").textContent = shelfColorSelect.options[shelfColorSelect.selectedIndex]?.text || "nie wybrano"; document.getElementById("shelfCountSummary").textContent = shelfCountSelect.value !== '0' && shelfCountSelect.selectedIndex >= 0 ? shelfCountSelect.options[shelfCountSelect.selectedIndex].text : '-- Wybier --'; const h = parseFloat(heightSelect.value); const sc = parseInt(shelfCountSelect.value); const t = 1.8; const nT = document.getElementById('noTopShelf')?.checked; const isStandingType = (currentShelfType === "standing") || (currentShelfType === "mug_shelf" && document.querySelector('input[name="mugShelfMount"]:checked')?.value === 'standing'); const nB = (isStandingType && document.getElementById('noBottomShelf')?.checked); let gT = "n/d"; const topExists = !nT; const bottomExists = !(isStandingType && nB); const topThickness = topExists ? t : 0; const bottomThickness = bottomExists ? t : 0; const totalAvailableHeight = h - topThickness - bottomThickness; if (!isNaN(sc) && sc >= 0) { const totalShelvesThickness = sc * t; if (totalAvailableHeight >= totalShelvesThickness) { const freeSpace = totalAvailableHeight - totalShelvesThickness; const gapsCount = sc + 1; gT = (freeSpace / gapsCount).toFixed(1) + " cm"; } else { gT = "za mało miejsca"; } } else { gT = "błąd"; } document.getElementById("gapSummary").textContent = gT; document.getElementById("gapSummaryDisplay").textContent = gT; const o = []; if (currentShelfType === 'mug_shelf') { const dividersSelected = []; if (dividersTopCheckbox?.checked) dividersSelected.push("góra"); if (dividersMiddleCheckbox?.checked) dividersSelected.push("środek"); if (dividersBottomCheckbox?.checked) dividersSelected.push("dół"); if (dividersSelected.length > 0) { o.push("Przegródki: " + dividersSelected.join(", ")); } } else { if (nT) o.push("bez górnej półki"); if (currentShelfType === 'standing' && nB) o.push("bez dolnej półki (podstawy)"); } document.getElementById("extraOptionsSummary").textContent = o.length ? o.join(" / ") : "standardowa"; const isComplete = currentShelfType && sideColorSelect.value && shelfColorSelect.value; const pH = document.getElementById("priceHint"); const orderActionsWrapper = document.getElementById("orderActionsWrapper"); const oCW = document.getElementById("orderCodeWindow"); const pSE = document.getElementById("priceSummary"); const oCVE = document.getElementById("orderCodeVisible"); const oCI = document.getElementById("orderCodeIcon"); if (oCI) oCI.classList.remove('icon-bounce'); const footerPriceText = document.getElementById("footerPriceText"); if (isComplete) { const pD = computePriceDetailed(); if (pD !== null) { const priceText = pD.total + " zł"; pSE.textContent = priceText; if (footerPriceText) footerPriceText.textContent = priceText; const c = generateOrderCode(); oCVE.textContent = c; pH.style.display = "none"; orderActionsWrapper.style.display = "flex"; if (oCI) oCI.classList.add('icon-bounce'); } else { pSE.textContent = "N/D"; if (footerPriceText) footerPriceText.textContent = ""; oCVE.textContent = "NIEDOSTĘPNA"; pH.textContent = "Wybrana konfiguracja jest niedostępna."; pH.style.display = "block"; orderActionsWrapper.style.display = "none"; oCW.style.display = "block"; } } else { pSE.textContent = ""; if (footerPriceText) footerPriceText.textContent = ""; oCVE.textContent = ""; pH.textContent = "Wybierz rodzaj półki i kolory, aby zobaczyć cenę."; pH.style.display = "block"; orderActionsWrapper.style.display = "none"; } }
+        function updateSwatchDisplay(selectElementId, swatchDisplayId) { const selectElement = document.getElementById(selectElementId); const swatchDisplay = document.getElementById(swatchDisplayId); if (!selectElement || !swatchDisplay) return; const selectedOption = selectElement.options[selectElement.selectedIndex]; const color = selectedOption ? selectedOption.dataset.color : null; if (color) { swatchDisplay.style.backgroundColor = color; swatchDisplay.style.display = 'inline-block'; if (color.toUpperCase() === '#FFFFFF') { swatchDisplay.classList.add('swatch-white-display'); } else { swatchDisplay.classList.remove('swatch-white-display'); } } else { swatchDisplay.style.backgroundColor = '#E5E7EB'; swatchDisplay.classList.remove('swatch-white-display'); } }
         function copyOrderSummary() { const code = document.getElementById("orderCodeVisible").textContent; const price = document.getElementById("priceSummary").textContent; if (!code || code.includes("NIEDOSTĘPNA") || !price) { alert("Wystąpił błąd, konfiguracja jest niekompletna lub niedostępna."); return; } navigator.clipboard.writeText(code).then(() => { alert(`✅ Kod zamówienia skopiowany: ${code}\n\n🔄 Przejdź teraz na Allegro i zamów na kwotę ${price}\n📋 W „Uwagi do zakupu” wklej skopiowany kod zamówienia.`); window.open("https://allegro.pl/oferta/zaprojektuj-wlasna-polke-podaj-wymiar-i-wybierz-kolory-do-kuchni-pokoju-17253898746", "_blank"); }).catch(err => { console.error('Błąd kopiowania: ', err); alert('Błąd kopiowania kodu.'); }); }
-        function downloadOrderSummary() {
-            const shelfType = document.getElementById("shelfTypeSummary").textContent;
-            const mugShelfMount = shelfType === 'Półka na kubki' ? document.getElementById("mugShelfMountSummary").textContent : '';
-            const width = document.getElementById("widthSummary").textContent;
-            const height = document.getElementById("heightSummary").textContent;
-            const depth = document.getElementById("depthSummary").textContent;
-            const sideColor = document.getElementById("sideColorSummary").textContent;
-            const shelfColor = document.getElementById("shelfColorSummary").textContent;
-            const shelfCount = document.getElementById("shelfCountSummary").textContent;
-            const gap = document.getElementById("gapSummary").textContent;
-            const extraOptions = document.getElementById("extraOptionsSummary").textContent;
-            const price = document.getElementById("priceSummary").textContent;
-            const orderCode = document.getElementById("orderCodeVisible").textContent;
-            if (!orderCode || orderCode.includes("NIEDOSTĘPNA") || !price) { alert("Wystąpił błąd, konfiguracja jest niekompletna lub niedostępna."); return; }
-            let content = `📦 Podsumowanie Zamówienia\n\n* Rodzaj półki: ${shelfType}\n`;
-            if (mugShelfMount) { content += `* Montaż: ${mugShelfMount}\n`; }
-            content += `* Szerokość: ${width}\n* Wysokość: ${height}\n* Głębokość: ${depth}\n\n` +
-                       `* Kolor boków: ${sideColor}\n* Kolor półek i podstaw: ${shelfColor}\n\n` + // Note: label in download remains 'podstaw'
-                       `* Ilość półek wewn.: ${shelfCount}\n* Odległość między półkami: ${gap}\n` +
-                       `* Opcje dodatkowe: ${extraOptions}\n\n` +
-                       `* Materiał: płyta laminowana gr. 1,8 cm\n* Termin realizacji: 5‑7 dni roboczych\n\n` +
-                       `Cena: ${price}\nKod zamówienia: ${orderCode}`;
-            const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `zamowienie-${orderCode}.txt`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-         }
+        function downloadOrderSummary() { const shelfType = document.getElementById("shelfTypeSummary").textContent; const mugShelfMount = shelfType === 'Półka na kubki' ? document.getElementById("mugShelfMountSummary").textContent : ''; const width = document.getElementById("widthSummary").textContent; const height = document.getElementById("heightSummary").textContent; const depth = document.getElementById("depthSummary").textContent; const sideColor = document.getElementById("sideColorSummary").textContent; const shelfColor = document.getElementById("shelfColorSummary").textContent; const shelfCount = document.getElementById("shelfCountSummary").textContent; const gap = document.getElementById("gapSummary").textContent; const extraOptions = document.getElementById("extraOptionsSummary").textContent; const price = document.getElementById("priceSummary").textContent; const orderCode = document.getElementById("orderCodeVisible").textContent; if (!orderCode || orderCode.includes("NIEDOSTĘPNA") || !price) { alert("Wystąpił błąd, konfiguracja jest niekompletna lub niedostępna."); return; } let content = `📦 Podsumowanie Zamówienia\n\n* Rodzaj półki: ${shelfType}\n`; if (mugShelfMount) { content += `* Montaż: ${mugShelfMount}\n`; } content += `* Szerokość: ${width}\n* Wysokość: ${height}\n* Głębokość: ${depth}\n\n* Kolor boków: ${sideColor}\n* Kolor półek i podstaw: ${shelfColor}\n\n* Ilość półek wewn.: ${shelfCount}\n* Odległość między półkami: ${gap}\n* Opcje dodatkowe: ${extraOptions}\n\n* Materiał: płyta laminowana gr. 1,8 cm\n* Termin realizacji: 5‑7 dni roboczych\n\nCena: ${price}\nKod zamówienia: ${orderCode}`; const blob = new Blob([content], { type: "text/plain;charset=utf-8" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `zamowienie-${orderCode}.txt`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
+        function closeDetailsPanelIfNeeded() { const detailsPanel = document.getElementById('materialSamplesDetails'); if (detailsPanel && detailsPanel.open) { detailsPanel.open = false; } }
+        function scrollToElement(elementId, blockPosition = 'start', inlinePosition = 'nearest') { const element = document.getElementById(elementId); if (element) { let targetElement = element; if (['widthSelectionArea', 'sideColor', 'shelfCountSection'].includes(elementId)) { if (elementId === 'widthSelectionArea' && dimensionSectionAnchor) targetElement = dimensionSectionAnchor; else if (elementId === 'sideColor' && colorSectionAnchor) targetElement = colorSectionAnchor; else if (elementId === 'shelfCountSection' && shelfCountSection) targetElement = shelfCountSection; } targetElement.scrollIntoView({ behavior: 'smooth', block: blockPosition, inline: inlinePosition }); console.log('Przewijanie do:', elementId); } else { console.error('Nie znaleziono elementu o ID:', elementId); } }
+        function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); console.log("Przewijanie na dół strony..."); }
+        function initializeTabbedGallery() { if (!galleryTabsContainer || !galleryGridContainer || !galleryImageArea || !configuratorSection || !galleryPrevArrow || !galleryNextArrow) { console.error("Nie znaleziono wszystkich wymaganych elementów dla galerii z zakładkami."); return; } const scrollToConfig = () => { configuratorSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; const displayImages = (galleryIndex) => { galleryGridContainer.innerHTML = ''; const images = galleryData[galleryIndex].imgs; const fragment = document.createDocumentFragment(); images.forEach((src, i) => { const tileDiv = document.createElement('div'); tileDiv.className = 'gallery-tile'; const imgContainer = document.createElement('div'); imgContainer.className = 'gallery-image-container'; const img = document.createElement('img'); img.src = src; img.alt = `${galleryData[galleryIndex].title} - zdjęcie ${i + 1}`; img.loading = 'lazy'; imgContainer.appendChild(img); const configBtn = document.createElement('div'); configBtn.className = 'config-btn'; configBtn.title = 'Kliknij, aby przejść do konfiguracji'; configBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.25"/><path d="M19.428 15.34a9.05 9.05 0 0 0 .05-6.68l-1.46-.84.51-1.77-2.12-2.12-1.77.51-.84-1.46a9.05 9.05 0 0 0-6.68 0l-.84 1.46-1.77-.51-2.12 2.12.51 1.77-1.46.84a9.05 9.05 0 0 0 0 6.68l1.46.84-.51 1.77 2.12 2.12 1.77-.51.84 1.46a9.05 9.05 0 0 0 6.68 0l.84-1.46 1.77.51 2.12-2.12-.51-1.77 1.46-.84z"/></svg>'; imgContainer.appendChild(configBtn); imgContainer.addEventListener('click', scrollToConfig); configBtn.addEventListener('click', (e) => { e.stopPropagation(); scrollToConfig(); }); const captionDiv = document.createElement('div'); captionDiv.className = 'gallery-caption'; captionDiv.textContent = 'Konfiguruj półkę'; tileDiv.appendChild(imgContainer); tileDiv.appendChild(captionDiv); fragment.appendChild(tileDiv); }); galleryGridContainer.appendChild(fragment); galleryImageArea.scrollLeft = 0; }; galleryData.forEach((gallery, index) => { const tab = document.createElement('button'); tab.className = 'gallery-tab'; tab.textContent = gallery.title; tab.dataset.index = index; if (index === 0) { tab.classList.add('active'); } tab.addEventListener('click', () => { galleryTabsContainer.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); displayImages(index); }); galleryTabsContainer.appendChild(tab); }); galleryNextArrow.addEventListener('click', () => { galleryImageArea.scrollBy({ left: galleryImageArea.clientWidth * 0.8, behavior: 'smooth' }); }); galleryPrevArrow.addEventListener('click', () => { galleryImageArea.scrollBy({ left: -galleryImageArea.clientWidth * 0.8, behavior: 'smooth' }); }); displayImages(0); }
+        function open3dPanel() { if (shelfContainer && modalOverlay) { shelfContainer.classList.add('active'); modalOverlay.classList.add('active'); setTimeout(onWindowResize, 50); } else { console.error("Nie można otworzyć panelu 3D - brak elementów shelfContainer lub modalOverlay"); } }
+        function close3dPanel() { if (shelfContainer && modalOverlay) { shelfContainer.classList.remove('active'); modalOverlay.classList.remove('active'); } }
+        function initialize3dPanel() { if (show3dButton && close3dPanelButton && modalOverlay && shelfContainer) { show3dButton.addEventListener('click', open3dPanel); close3dPanelButton.addEventListener('click', close3dPanel); modalOverlay.addEventListener('click', close3dPanel); console.log("Panel 3D zainicjalizowany."); } else { console.warn("Nie znaleziono wszystkich elementów panelu 3D (przycisk otwarcia, zamknięcia, overlay, kontener). Funkcjonalność może nie działać."); } }
+        function initializeReviews() { const reviews = [ '"Fantastyczna półeczka, przyszła od razu zmontowana i idealnie pasuje w wielu miejscach. Serdecznie polecam!"', '"Piękna, zgrabna półka. Solidnie wykonana, bez żadnych wad. Polecam!"', '"Bardzo ładna i funkcjonalna półka, świetnie zapakowana na czas transportu. Polecam!"', '"Super produkt – pięknie wykonany, idealnie pasuje do małych słoiczków z przyprawami w kuchni. Polecam!"', '"Ładna i solidna półka, starannie wykonana. Kolor świetnie wpasował się w meble. Polecam!"' ]; let currentReviewIndex = 0; const reviewDisplay = document.getElementById('customerReview'); function showNextReview() { if (!reviewDisplay) return; reviewDisplay.classList.remove('review-fade-enter-active'); setTimeout(() => { const reviewData = reviews[currentReviewIndex]; reviewDisplay.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-lime-500 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> ${reviewData}`; reviewDisplay.classList.add('review-fade-enter-active'); currentReviewIndex = (currentReviewIndex + 1) % reviews.length; }, 700); } if (reviewDisplay) { showNextReview(); setInterval(showNextReview, 6000); } }
 
-          function presetConfig(heightVal, widthVal, depthVal, shelfCountVal, shelfTypeVal = "standing", noTopShelfVal = false, noBottomShelfVal = false, sideColorVal = null, shelfColorVal = null) {
-              shelfTypeSelect.value = shelfTypeVal;
-              handleShelfTypeChange();
-              setTimeout(() => {
-                  if (shelfTypeVal !== 'mug_shelf') {
-                       if (["34", "44", "50", "60"].includes(widthVal.toString())) { widthSelect.value = widthVal.toString(); }
-                       else { widthSelect.value = "custom"; customWidthInput.value = widthVal; }
-                       checkCustomWidth();
-                       heightSelect.value = heightVal.toString();
-                        updateDepthOptions();
-                       if (Array.from(depthSelect.options).some(opt => opt.value == depthVal.toString())) { depthSelect.value = depthVal.toString(); }
-                       else { console.warn(`Głębokość ${depthVal} niedostępna dla presetu. Ustawiono domyślną.`); }
-                       updateShelfCountOptions();
-                       if (Array.from(shelfCountSelect.options).some(opt => opt.value == shelfCountVal.toString())) { shelfCountSelect.value = shelfCountVal.toString(); }
-                       else { console.warn(`Liczba półek ${shelfCountVal} niedostępna dla presetu. Ustawiono domyślną.`); }
-                  } else {
-                      if (widthVal.toString() === '60') { widthSelect.value = '60'; }
-                      else { widthSelect.value = '44'; }
-                       handleMugShelfWidthChange();
-                       const mountRadio = document.querySelector('input[name="mugShelfMount"][value="hanging"]');
-                       if (mountRadio) mountRadio.checked = true;
-                  }
-                  if (sideColorVal && Array.from(sideColorSelect.options).some(opt => opt.value === sideColorVal)) { sideColorSelect.value = sideColorVal; }
-                  if (shelfColorVal && Array.from(shelfColorSelect.options).some(opt => opt.value === shelfColorVal)) { shelfColorSelect.value = shelfColorVal; }
-                  updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay');
-                  updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay');
-                  if (shelfTypeVal !== 'mug_shelf') {
-                       const noTopCheckbox = document.getElementById('noTopShelf');
-                       if (noTopCheckbox) { noTopCheckbox.checked = noTopShelfVal; }
-                       const noBottomCheckbox = document.getElementById('noBottomShelf');
-                       if (noBottomCheckbox && shelfTypeVal === 'standing') { noBottomCheckbox.checked = noBottomShelfVal; }
-                       else if (noBottomCheckbox) { noBottomCheckbox.checked = false; }
-                  }
-                   if(dividersTopCheckbox) dividersTopCheckbox.checked = false;
-                   if(dividersMiddleCheckbox) dividersMiddleCheckbox.checked = false;
-                   if(dividersBottomCheckbox) dividersBottomCheckbox.checked = false;
-                  updatePreview();
-                  updateOrderSummary();
-                  if(configuratorSection) configuratorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-             }, 100);
-         }
+        // --- Inicjalizacja po załadowaniu DOM ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Przypisanie elementów DOM do zmiennych
+            shelfContainer = document.getElementById('shelfContainer');
+            threeJsCanvasWrapper = document.getElementById('threeJsCanvasWrapper');
+            shelfTypeSelect = document.getElementById('shelfType');
+            widthSelect = document.getElementById('width');
+            heightSelect = document.getElementById('height');
+            depthSelect = document.getElementById('depth');
+            shelfCountSelect = document.getElementById('shelfCount');
+            customWidthInput = document.getElementById('customWidthInput');
+            customWidthDisplay = document.getElementById('customWidthDisplay');
+            customWidthFee = document.getElementById('customWidthFee');
+            shelfTypeOptionsDiv = document.getElementById('shelfTypeOptions');
+            widthSelectionArea = document.getElementById('widthSelectionArea');
+            dimensionSectionAnchor = document.getElementById('dimensionSectionAnchor');
+            colorSectionAnchor = document.getElementById('colorSectionAnchor');
+            heightLabel = document.getElementById('heightLabel');
+            depthLabel = document.getElementById('depthLabel');
+            sideColorSelect = document.getElementById('sideColor');
+            shelfColorSelect = document.getElementById('shelfColor');
+            mugShelfSpecificOptionsContainer = document.getElementById('mugShelfSpecificOptionsContainer');
+            mugShelfMountOptionsDiv = document.getElementById('mugShelfMountOptions');
+            mugShelfDividersOptionsDiv = document.getElementById('mugShelfDividersOptions');
+            dividersTopCheckbox = document.getElementById('dividersTop');
+            dividersMiddleCheckbox = document.getElementById('dividersMiddle');
+            dividersBottomCheckbox = document.getElementById('dividersBottom');
+            loadOrderCodeInput = document.getElementById('loadOrderCodeInput');
+            loadOrderCodeButton = document.getElementById('loadOrderCodeButton');
+            configuratorSection = document.getElementById('configuratorSection');
+            shelfCountSection = document.getElementById('shelfCountSection');
+            galleryTabsContainer = document.getElementById('galleryTabsContainer');
+            galleryGridContainer = document.getElementById('galleryGridContainer');
+            galleryImageArea = document.getElementById('galleryImageArea');
+            galleryPrevArrow = document.querySelector('.gallery-prev-arrow');
+            galleryNextArrow = document.querySelector('.gallery-next-arrow');
+            modalOverlay = document.getElementById('modalOverlay');
+            show3dButton = document.getElementById('show3dButton');
+            close3dPanelButton = document.getElementById('close3dPanelButton');
+            footerPriceTextElement = document.getElementById('footerPriceText');
 
-        function closeDetailsPanelIfNeeded() {
-            const detailsPanel = document.getElementById('materialSamplesDetails');
-            if (detailsPanel && detailsPanel.open) { detailsPanel.open = false; }
-        }
+            // Zapisz oryginalne opcje selectów
+            if(widthSelect) originalWidthOptions = Array.from(widthSelect.options).map(opt => ({value: opt.value, text: opt.text}));
+            if(heightSelect) originalHeightOptions = Array.from(heightSelect.options).map(opt => ({value: opt.value, text: opt.text}));
 
-        window.onload = function() {
+
+            // Uruchomienie głównych funkcji inicjalizacyjnych
             try {
                  handleShelfTypeChange();
                  init3D();
                  updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay');
                  updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay');
                  updateOrderSummary();
-                console.log("Inicjalizacja konfiguratora zakończona.");
+                 initializeTabbedGallery();
+                 initialize3dPanel(); // Inicjalizacja panelu 3D
+                 initializeReviews();
+                 console.log("Inicjalizacja konfiguratora zakończona.");
+
+                 // Inicjalizacja Swipera dla próbek kolorów
                  const detailsPanel = document.getElementById('materialSamplesDetails');
                  if (detailsPanel) {
                      detailsPanel.addEventListener('toggle', function initMaterialSwiperOnToggle() {
                          if (detailsPanel.open && !materialSwiperInstance) {
-                             if (typeof Swiper === 'undefined') {
-                                 console.error("Swiper library not loaded!"); return;
-                             }
-                             materialSwiperInstance = new Swiper('#materialSwiper', { slidesPerView: 1, spaceBetween: 10, navigation: { nextEl: '.material-swiper-button-next', prevEl: '.material-swiper-button-prev' }, observer: true, observeParents: true });
-                         } else if (detailsPanel.open && materialSwiperInstance) {
-                              materialSwiperInstance.update();
-                         }
+                             if (typeof Swiper === 'undefined') { console.error("Swiper library not loaded!"); return; }
+                             try { materialSwiperInstance = new Swiper('#materialSwiper', { slidesPerView: 1, spaceBetween: 10, navigation: { nextEl: '.material-swiper-button-next', prevEl: '.material-swiper-button-prev' }, observer: true, observeParents: true }); }
+                             catch (swiperError) { console.error("Błąd inicjalizacji Swipera:", swiperError); }
+                         } else if (detailsPanel.open && materialSwiperInstance) { materialSwiperInstance.update(); }
                      });
-                     document.addEventListener('click', function(event) {
-                         if (detailsPanel.open && !detailsPanel.contains(event.target)) { detailsPanel.open = false; }
-                     });
+                     document.addEventListener('click', function(event) { if (detailsPanel.open && !detailsPanel.contains(event.target)) { detailsPanel.open = false; } });
                  } else { console.warn("Element panelu próbek (#materialSamplesDetails) nie znaleziony."); }
+
+                 // Zamykanie panelu próbek po zmianie opcji
                  const formElementsToMonitor = document.querySelectorAll('#shelfType, #width, #customWidthInput, #height, #depth, #shelfCount');
-                 formElementsToMonitor.forEach(element => {
-                     const eventType = (element.type === 'range') ? 'input' : 'change';
-                     element.addEventListener(eventType, closeDetailsPanelIfNeeded);
-                 });
+                 formElementsToMonitor.forEach(element => { const eventType = (element.type === 'range') ? 'input' : 'change'; element.addEventListener(eventType, closeDetailsPanelIfNeeded); });
                  const configPanelContainer = document.querySelector('.w-full.md\\:w-1\\/3.space-y-8');
-                 if (configPanelContainer) {
-                    configPanelContainer.addEventListener('change', function(event) {
-                         if (event.target.matches('#shelfTypeOptions input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="radio"]')) { closeDetailsPanelIfNeeded(); }
-                    });
-                 } else {
-                    document.body.addEventListener('change', function(event) {
-                         if (event.target.matches('#noTopShelf, #noBottomShelf, #dividersTop, #dividersMiddle, #dividersBottom, input[name="mugShelfMount"]')) { closeDetailsPanelIfNeeded(); }
-                    });
-                 }
-                 initializeTabbedGallery();
-            } catch (error) {
-                console.error("Błąd inicjalizacji:", error);
+                 if (configPanelContainer) { configPanelContainer.addEventListener('change', function(event) { if (event.target.matches('#shelfTypeOptions input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="radio"]')) { closeDetailsPanelIfNeeded(); } });
+                 } else { document.body.addEventListener('change', function(event) { if (event.target.matches('#noTopShelf, #noBottomShelf, #dividersTop, #dividersMiddle, #dividersBottom, input[name="mugShelfMount"]')) { closeDetailsPanelIfNeeded(); } }); }
+
+             } catch (error) {
+                console.error("Błąd inicjalizacji w DOMContentLoaded:", error);
                 const body = document.querySelector('body');
-                if (body) {
-                    const errorMsg = document.createElement('p');
-                    errorMsg.textContent = "Wystąpił błąd podczas ładowania konfiguratora. Spróbuj odświeżyć stronę.";
-                    errorMsg.className = "text-red-600 font-bold text-center p-4 bg-red-100";
-                    body.prepend(errorMsg);
-                }
+                if (body) { const errorMsg = document.createElement('p'); errorMsg.textContent = "Wystąpił błąd podczas ładowania strony. Spróbuj odświeżyć."; errorMsg.className = "text-red-600 font-bold text-center p-4 bg-red-100"; body.prepend(errorMsg); }
             }
-        };
 
-        function scrollToElement(elementId, blockPosition = 'start') {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: blockPosition });
-                console.log('Przewijanie do:', elementId, 'z pozycją:', blockPosition);
-            } else {
-                console.error('Nie znaleziono elementu o ID:', elementId);
+            // Przenoszenie bloku opinii na mobile
+            if (window.innerWidth < 768) {
+              const reviewBlock = document.getElementById('customerReview')?.parentElement;
+              const summarySection = document.querySelector('.w-full.md\\:w-1\\/3.order-3');
+              if (reviewBlock && summarySection && reviewBlock.parentElement !== summarySection) {
+                  summarySection.appendChild(reviewBlock);
+                  console.log("Przeniesiono blok opinii na koniec sekcji podsumowania na mobile.");
+              }
             }
-        }
-
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const reviews = [
-                '"Fantastyczna półeczka, przyszła od razu zmontowana i idealnie pasuje w wielu miejscach. Serdecznie polecam!"',
-                '"Piękna, zgrabna półka. Solidnie wykonana, bez żadnych wad. Polecam!"',
-                '"Bardzo ładna i funkcjonalna półka, świetnie zapakowana na czas transportu. Polecam!"',
-                '"Super produkt – pięknie wykonany, idealnie pasuje do małych słoiczków z przyprawami w kuchni. Polecam!"',
-                '"Ładna i solidna półka, starannie wykonana. Kolor świetnie wpasował się w meble. Polecam!"'
-            ];
-            let currentReviewIndex = 0;
-            const reviewDisplay = document.getElementById('customerReview');
-            function showNextReview() {
-                if (!reviewDisplay) return;
-                reviewDisplay.classList.remove('review-fade-enter-active');
-                setTimeout(() => {
-                    const reviewData = reviews[currentReviewIndex];
-                    reviewDisplay.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-lime-500 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> ${reviewData}`;
-                    reviewDisplay.classList.add('review-fade-enter-active');
-                    currentReviewIndex = (currentReviewIndex + 1) % reviews.length;
-                }, 700);
-            }
-            if (reviewDisplay) { showNextReview(); setInterval(showNextReview, 6000); }
         });
     </script>
 
-    <script>
-      const galleryData = [
-        {title:'Półki wiszące', imgs:['img/1.jpg','img/2.jpg','img/3.jpg','img/4.jpg','img/5.jpg','img/6.jpg','img/7.jpg','img/8.jpg','img/9.jpg','img/10.jpg']},
-        {title:'Półki wiszące', imgs:['img/1a.jpg','img/2a.jpg','img/3a.jpg','img/4a.jpg','img/5a.jpg','img/6a.jpg','img/7a.jpg','img/8a.jpg','img/9a.jpg','img/10a.jpg']},
-        {title:'Półki na kubki', imgs:['img/dabduze.jpg','img/bialyduze.jpg','img/czarnyduze.jpg']}
-      ];
-
-      function initializeTabbedGallery() {
-          if (!galleryTabsContainer || !galleryGridContainer || !galleryImageArea || !configuratorSection || !galleryPrevArrow || !galleryNextArrow) {
-              console.error("Nie znaleziono wszystkich wymaganych elementów dla galerii z zakładkami.");
-              return;
-          }
-
-          const scrollToConfig = () => {
-                configuratorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          };
-
-          const displayImages = (galleryIndex) => {
-              galleryGridContainer.innerHTML = '';
-              const images = galleryData[galleryIndex].imgs;
-              const fragment = document.createDocumentFragment();
-
-              images.forEach((src, i) => {
-                  const tileDiv = document.createElement('div');
-                  tileDiv.className = 'gallery-tile';
-                  const imgContainer = document.createElement('div');
-                  imgContainer.className = 'gallery-image-container';
-                  const img = document.createElement('img');
-                  img.src = src;
-                  img.alt = `${galleryData[galleryIndex].title} - zdjęcie ${i + 1}`;
-                  img.loading = 'lazy';
-                  imgContainer.appendChild(img);
-                  const configBtn = document.createElement('div');
-                  configBtn.className = 'config-btn';
-                  configBtn.title = 'Kliknij, aby przejść do konfiguracji';
-                  configBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.25"/><path d="M19.428 15.34a9.05 9.05 0 0 0 .05-6.68l-1.46-.84.51-1.77-2.12-2.12-1.77.51-.84-1.46a9.05 9.05 0 0 0-6.68 0l-.84 1.46-1.77-.51-2.12 2.12.51 1.77-1.46.84a9.05 9.05 0 0 0 0 6.68l1.46.84-.51 1.77 2.12 2.12 1.77-.51.84 1.46a9.05 9.05 0 0 0 6.68 0l.84-1.46 1.77.51 2.12-2.12-.51-1.77 1.46-.84z"/></svg>';
-                  imgContainer.appendChild(configBtn);
-                  imgContainer.addEventListener('click', scrollToConfig);
-                  configBtn.addEventListener('click', (e) => {
-                     e.stopPropagation();
-                     scrollToConfig();
-                  });
-                  const captionDiv = document.createElement('div');
-                  captionDiv.className = 'gallery-caption';
-                  captionDiv.textContent = 'Konfiguruj półkę';
-                  tileDiv.appendChild(imgContainer);
-                  tileDiv.appendChild(captionDiv);
-                  fragment.appendChild(tileDiv);
-              });
-
-              galleryGridContainer.appendChild(fragment);
-              galleryImageArea.scrollLeft = 0;
-          }
-
-          galleryData.forEach((gallery, index) => {
-              const tab = document.createElement('button');
-              tab.className = 'gallery-tab';
-              tab.textContent = gallery.title;
-              tab.dataset.index = index;
-              if (index === 0) { tab.classList.add('active'); }
-              tab.addEventListener('click', () => {
-                  galleryTabsContainer.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
-                  tab.classList.add('active');
-                  displayImages(index);
-              });
-              galleryTabsContainer.appendChild(tab);
-          });
-
-          galleryNextArrow.addEventListener('click', () => {
-              galleryImageArea.scrollBy({ left: galleryImageArea.clientWidth * 0.8, behavior: 'smooth' });
-          });
-          galleryPrevArrow.addEventListener('click', () => {
-              galleryImageArea.scrollBy({ left: -galleryImageArea.clientWidth * 0.8, behavior: 'smooth' });
-          });
-
-          displayImages(0);
-      }
-    </script>
-
-    <div id="stickyFooterBar" class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-3px_6px_rgba(0,0,0,0.06)] p-2 flex gap-2 items-center md:hidden z-50 rounded-tl-lg rounded-tr-lg">
-        <button
-            onclick="scrollToElement('shelfContainer', 'center')"
-            class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-150 ease-in-out"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <span class="truncate">Pokaż 3D</span>
+    <div id="stickyFooterBar" class="fixed bottom-0 left-0 w-full bg-green-600 shadow-[0_-3px_6px_rgba(0,0,0,0.06)] flex justify-around items-stretch md:hidden z-50">
+        <button onclick="scrollToElement('dimensionSectionAnchor', 'start')" title="Przewiń do wymiarów">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" /> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v16.5M20.25 3.75v16.5" /> </svg>
+            <span>Wymiary</span>
         </button>
-
-        <button
-            onclick="scrollToElement('shelfCountSection', 'center')"
-            class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-150 ease-in-out"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <span class="truncate">Dodaj półki</span>
+        <button onclick="scrollToElement('colorSectionAnchor', 'start')" title="Przewiń do kolorów">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /> </svg>
+            <span>Kolory</span>
         </button>
-
+        <button onclick="scrollToElement('shelfCountSection', 'center')" title="Przewiń do dodawania półek">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5M3.75 15h16.5" /> </svg>
+            <span>Półki</span>
+        </button>
+        <button id="show3dButton" title="Pokaż/ukryj podgląd 3D">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9.75l-9 5.25M12 21v-9.75" /> </svg>
+            <span>3D</span>
+        </button>
+        <div id="footerPriceDisplay" class="text-white px-1" onclick="scrollToBottom()" title="Przewiń na dół strony">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /> <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /> </svg>
+             <span id="footerPriceText"></span>
+        </div>
     </div>
     </body>
 </html>
+
