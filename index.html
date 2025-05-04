@@ -12,7 +12,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Konfigurator Półki</title>
-    <script src="https://cdn.tailwindcss.com"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <style>
@@ -301,15 +302,26 @@
         #stickyFooterBar > *:focus { background-color: rgba(255, 255, 255, 0.1); outline: none; border-radius: 0.25rem; }
         #stickyFooterBar button svg,
         #stickyFooterBar #footerPriceDisplay svg { width: 1.5rem; height: 1.5rem; margin-bottom: 0.125rem; pointer-events: none; }
-        #footerPriceDisplay { font-weight: bold; font-size: 0.875rem; line-height: 1.25rem; padding: 0 0.25rem; }
+        #footerPriceDisplay { font-weight: bold; font-size: 0.875rem; line-height: 1.25rem; padding: 0 0.25rem; cursor: default; /* Domyślnie nieklikalny */ }
+
+        /* DODANA animacja obracania */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin 4s linear infinite; /* Czas obrotu 4 sekundy */
+        }
 
     </style>
 
 </head>
 <body class="flex flex-col justify-center items-center min-h-screen bg-stone-100 font-sans text-stone-800 pb-20 md:pb-0">
 
-    <div id="modalOverlay"></div> <div class="w-full max-w-7xl mx-auto px-4 md:px-6 my-6">
-        <details class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg md:hidden group"> <summary class="flex justify-between items-center cursor-pointer list-none">
+    <div id="modalOverlay"></div>
+    <div class="w-full max-w-7xl mx-auto px-4 md:px-6 my-6">
+        <details class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg md:hidden group">
+             <summary class="flex justify-between items-center cursor-pointer list-none">
                 <h2 class="text-lg font-semibold text-emerald-800">Jak zamówić półkę?</h2>
                 <span class="marker transform transition-transform duration-200 rotate-0 group-open:rotate-180">
                      <svg class="w-5 h-5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
@@ -562,9 +574,11 @@
                      </div>
                  </div>
             </div>
-            </div> </div> <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+            </div>
+    </div>
 
-    <script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
         // --- Zmienne globalne i elementy DOM ---
         let scene, camera, renderer, shelfGroup, controls;
         let shelfContainer, threeJsCanvasWrapper, materialSwiperInstance;
@@ -577,7 +591,7 @@
         let loadOrderCodeInput, loadOrderCodeButton, configuratorSection, shelfCountSection;
         let galleryTabsContainer, galleryGridContainer, galleryImageArea, galleryPrevArrow, galleryNextArrow;
         let modalOverlay, show3dButton, collapse3dPanelButton;
-        let footerPriceTextElement;
+        let footerPriceTextElement, selectionCompleteIndicator; // Dodano selectionCompleteIndicator
         let autoRotateEnabled = true;
         const initialCameraPosition = { x: 4, y: 5, z: 7 }; // Store initial camera position
 
@@ -667,7 +681,80 @@
              handleDimensionChange(); alert("Konfiguracja została wczytana!"); loadOrderCodeInput.value = '';
              } catch (error) { console.error("Błąd podczas wczytywania konfiguracji:", error); alert(`Nie udało się wczytać konfiguracji. Błąd: ${error.message}\nSprawdź poprawność kodu.`); }
         }
-        function updateOrderSummary() { const shelfColorSummaryLabel = document.getElementById('shelfColorSummaryLabel'); const currentShelfType = shelfTypeSelect.value; if (shelfColorSummaryLabel) { if (currentShelfType === 'mug_shelf') shelfColorSummaryLabel.textContent = 'Kolor półek i przegródek:'; else shelfColorSummaryLabel.textContent = 'Kolor półek i podstaw:'; } document.getElementById("shelfTypeSummary").textContent = currentShelfType && shelfTypeSelect.selectedIndex >= 0 ? shelfTypeSelect.options[shelfTypeSelect.selectedIndex].text : "-- Wybierz --"; const mugShelfMountItem = document.getElementById("mugShelfMountSummaryItem"); const mugShelfMountSummary = document.getElementById("mugShelfMountSummary"); if (currentShelfType === 'mug_shelf') { const selectedMountRadio = document.querySelector('input[name="mugShelfMount"]:checked'); mugShelfMountSummary.textContent = selectedMountRadio ? (selectedMountRadio.value === 'hanging' ? 'Wisząca' : 'Stojąca') : 'nie wybrano'; mugShelfMountItem.style.display = 'flex'; } else { mugShelfMountItem.style.display = 'none'; } document.getElementById("widthSummary").textContent = getCurrentWidth() + " cm"; document.getElementById("heightSummary").textContent = heightSelect.value + " cm"; document.getElementById("depthSummary").textContent = depthSelect.value + " cm"; document.getElementById("sideColorSummary").textContent = sideColorSelect.options[sideColorSelect.selectedIndex]?.text || "nie wybrano"; document.getElementById("shelfColorSummary").textContent = shelfColorSelect.options[shelfColorSelect.selectedIndex]?.text || "nie wybrano"; document.getElementById("shelfCountSummary").textContent = shelfCountSelect.value !== '0' && shelfCountSelect.selectedIndex >= 0 ? shelfCountSelect.options[shelfCountSelect.selectedIndex].text : '-- Wybier --'; const h = parseFloat(heightSelect.value); const sc = parseInt(shelfCountSelect.value); const t = 1.8; const nT = document.getElementById('noTopShelf')?.checked; const isStandingType = (currentShelfType === "standing") || (currentShelfType === "mug_shelf" && document.querySelector('input[name="mugShelfMount"]:checked')?.value === 'standing'); const nB = (isStandingType && document.getElementById('noBottomShelf')?.checked); let gT = "n/d"; const topExists = !nT; const bottomExists = !(isStandingType && nB); const topThickness = topExists ? t : 0; const bottomThickness = bottomExists ? t : 0; const totalAvailableHeight = h - topThickness - bottomThickness; if (!isNaN(sc) && sc >= 0) { const totalShelvesThickness = sc * t; if (totalAvailableHeight >= totalShelvesThickness) { const freeSpace = totalAvailableHeight - totalShelvesThickness; const gapsCount = sc + 1; gT = (freeSpace / gapsCount).toFixed(1) + " cm"; } else { gT = "za mało miejsca"; } } else { gT = "błąd"; } document.getElementById("gapSummary").textContent = gT; document.getElementById("gapSummaryDisplay").textContent = gT; const o = []; if (currentShelfType === 'mug_shelf') { const dividersSelected = []; if (dividersTopCheckbox?.checked) dividersSelected.push("góra"); if (dividersMiddleCheckbox?.checked) dividersSelected.push("środek"); if (dividersBottomCheckbox?.checked) dividersSelected.push("dół"); if (dividersSelected.length > 0) { o.push("Przegródki: " + dividersSelected.join(", ")); } } else { if (nT) o.push("bez górnej półki"); if (currentShelfType === 'standing' && nB) o.push("bez dolnej półki (podstawy)"); } document.getElementById("extraOptionsSummary").textContent = o.length ? o.join(" / ") : "standardowa"; const isComplete = currentShelfType && sideColorSelect.value && shelfColorSelect.value; const pH = document.getElementById("priceHint"); const orderActionsWrapper = document.getElementById("orderActionsWrapper"); const oCW = document.getElementById("orderCodeWindow"); const pSE = document.getElementById("priceSummary"); const oCVE = document.getElementById("orderCodeVisible"); const oCI = document.getElementById("orderCodeIcon"); if (oCI) oCI.classList.remove('icon-bounce'); const footerPriceText = document.getElementById("footerPriceText"); if (isComplete) { const pD = computePriceDetailed(); if (pD !== null) { const priceText = pD.total + " zł"; pSE.textContent = priceText; if (footerPriceText) footerPriceText.textContent = priceText; const c = generateOrderCode(); oCVE.textContent = c; pH.style.display = "none"; orderActionsWrapper.style.display = "flex"; if (oCI) oCI.classList.add('icon-bounce'); } else { pSE.textContent = "N/D"; if (footerPriceText) footerPriceText.textContent = ""; oCVE.textContent = "NIEDOSTĘPNA"; pH.textContent = "Wybrana konfiguracja jest niedostępna."; pH.style.display = "block"; orderActionsWrapper.style.display = "none"; oCW.style.display = "block"; } } else { pSE.textContent = ""; if (footerPriceText) footerPriceText.textContent = ""; oCVE.textContent = ""; pH.textContent = "Wybierz rodzaj półki i kolory, aby zobaczyć cenę."; pH.style.display = "block"; orderActionsWrapper.style.display = "none"; } }
+        function updateOrderSummary() {
+            const shelfColorSummaryLabel = document.getElementById('shelfColorSummaryLabel');
+            const currentShelfType = shelfTypeSelect.value;
+            if (shelfColorSummaryLabel) {
+                if (currentShelfType === 'mug_shelf') shelfColorSummaryLabel.textContent = 'Kolor półek i przegródek:';
+                else shelfColorSummaryLabel.textContent = 'Kolor półek i podstaw:';
+            }
+            document.getElementById("shelfTypeSummary").textContent = currentShelfType && shelfTypeSelect.selectedIndex >= 0 ? shelfTypeSelect.options[shelfTypeSelect.selectedIndex].text : "-- Wybierz --";
+            const mugShelfMountItem = document.getElementById("mugShelfMountSummaryItem");
+            const mugShelfMountSummary = document.getElementById("mugShelfMountSummary");
+            if (currentShelfType === 'mug_shelf') {
+                const selectedMountRadio = document.querySelector('input[name="mugShelfMount"]:checked');
+                mugShelfMountSummary.textContent = selectedMountRadio ? (selectedMountRadio.value === 'hanging' ? 'Wisząca' : 'Stojąca') : 'nie wybrano';
+                mugShelfMountItem.style.display = 'flex';
+            } else {
+                mugShelfMountItem.style.display = 'none';
+            }
+            document.getElementById("widthSummary").textContent = getCurrentWidth() + " cm";
+            document.getElementById("heightSummary").textContent = heightSelect.value + " cm";
+            document.getElementById("depthSummary").textContent = depthSelect.value + " cm";
+            document.getElementById("sideColorSummary").textContent = sideColorSelect.options[sideColorSelect.selectedIndex]?.text || "nie wybrano";
+            document.getElementById("shelfColorSummary").textContent = shelfColorSelect.options[shelfColorSelect.selectedIndex]?.text || "nie wybrano";
+            document.getElementById("shelfCountSummary").textContent = shelfCountSelect.value !== '0' && shelfCountSelect.selectedIndex >= 0 ? shelfCountSelect.options[shelfCountSelect.selectedIndex].text : '-- Wybier --';
+            const h = parseFloat(heightSelect.value); const sc = parseInt(shelfCountSelect.value); const t = 1.8; const nT = document.getElementById('noTopShelf')?.checked; const isStandingType = (currentShelfType === "standing") || (currentShelfType === "mug_shelf" && document.querySelector('input[name="mugShelfMount"]:checked')?.value === 'standing'); const nB = (isStandingType && document.getElementById('noBottomShelf')?.checked); let gT = "n/d"; const topExists = !nT; const bottomExists = !(isStandingType && nB); const topThickness = topExists ? t : 0; const bottomThickness = bottomExists ? t : 0; const totalAvailableHeight = h - topThickness - bottomThickness; if (!isNaN(sc) && sc >= 0) { const totalShelvesThickness = sc * t; if (totalAvailableHeight >= totalShelvesThickness) { const freeSpace = totalAvailableHeight - totalShelvesThickness; const gapsCount = sc + 1; gT = (freeSpace / gapsCount).toFixed(1) + " cm"; } else { gT = "za mało miejsca"; } } else { gT = "błąd"; } document.getElementById("gapSummary").textContent = gT; document.getElementById("gapSummaryDisplay").textContent = gT; const o = []; if (currentShelfType === 'mug_shelf') { const dividersSelected = []; if (dividersTopCheckbox?.checked) dividersSelected.push("góra"); if (dividersMiddleCheckbox?.checked) dividersSelected.push("środek"); if (dividersBottomCheckbox?.checked) dividersSelected.push("dół"); if (dividersSelected.length > 0) { o.push("Przegródki: " + dividersSelected.join(", ")); } } else { if (nT) o.push("bez górnej półki"); if (currentShelfType === 'standing' && nB) o.push("bez dolnej półki (podstawy)"); } document.getElementById("extraOptionsSummary").textContent = o.length ? o.join(" / ") : "standardowa";
+            const isComplete = currentShelfType && sideColorSelect.value && shelfColorSelect.value;
+            const pH = document.getElementById("priceHint");
+            const orderActionsWrapper = document.getElementById("orderActionsWrapper");
+            const oCW = document.getElementById("orderCodeWindow");
+            const pSE = document.getElementById("priceSummary");
+            const oCVE = document.getElementById("orderCodeVisible");
+            const oCI = document.getElementById("orderCodeIcon");
+            if (oCI) oCI.classList.remove('icon-bounce');
+
+            // --- ZMIANY DLA IKONY GALOCZKI ---
+            const indicator = document.getElementById('selectionCompleteIndicator');
+            const footerPriceText = document.getElementById("footerPriceText");
+            const footerPriceDisplay = document.getElementById("footerPriceDisplay");
+            // --- KONIEC ZMIAN DLA IKONY GALOCZKI ---
+
+            if (isComplete) {
+                const pD = computePriceDetailed();
+                if (pD !== null) {
+                    const priceText = pD.total + " zł";
+                    pSE.textContent = priceText;
+                    if (footerPriceText) footerPriceText.textContent = priceText; // Aktualizacja ceny na dolnym pasku
+                    const c = generateOrderCode();
+                    oCVE.textContent = c;
+                    pH.style.display = "none";
+                    orderActionsWrapper.style.display = "flex";
+                    if (oCI) oCI.classList.add('icon-bounce');
+                    if (indicator) indicator.style.display = 'inline'; // Pokaż галочку
+                    if (footerPriceDisplay) footerPriceDisplay.style.cursor = 'pointer'; // Ustaw kursor na klikalny dla ceny
+                } else {
+                    pSE.textContent = "N/D";
+                    if (footerPriceText) footerPriceText.textContent = ""; // Wyczyść cenę na dolnym pasku
+                    oCVE.textContent = "NIEDOSTĘPNA";
+                    pH.textContent = "Wybrana konfiguracja jest niedostępna.";
+                    pH.style.display = "block";
+                    orderActionsWrapper.style.display = "none";
+                    oCW.style.display = "block";
+                    if (indicator) indicator.style.display = 'none'; // Ukryj галочку
+                    if (footerPriceDisplay) footerPriceDisplay.style.cursor = 'default'; // Ustaw kursor na domyślny
+                }
+            } else {
+                pSE.textContent = "";
+                if (footerPriceText) footerPriceText.textContent = ""; // Wyczyść cenę na dolnym pasku
+                oCVE.textContent = "";
+                pH.textContent = "Wybierz rodzaj półki i kolory, aby zobaczyć cenę.";
+                pH.style.display = "block";
+                orderActionsWrapper.style.display = "none";
+                if (indicator) indicator.style.display = 'none'; // Ukryj галочку
+                if (footerPriceDisplay) footerPriceDisplay.style.cursor = 'default'; // Ustaw kursor na domyślny
+            }
+        }
         function updateSwatchDisplay(selectElementId, swatchDisplayId) { const selectElement = document.getElementById(selectElementId); const swatchDisplay = document.getElementById(swatchDisplayId); if (!selectElement || !swatchDisplay) return; const selectedOption = selectElement.options[selectElement.selectedIndex]; const color = selectedOption ? selectedOption.dataset.color : null; if (color) { swatchDisplay.style.backgroundColor = color; swatchDisplay.style.display = 'inline-block'; if (color.toUpperCase() === '#FFFFFF') { swatchDisplay.classList.add('swatch-white-display'); } else { swatchDisplay.classList.remove('swatch-white-display'); } } else { swatchDisplay.style.backgroundColor = '#E5E7EB'; swatchDisplay.classList.remove('swatch-white-display'); } }
         function copyOrderSummary() { const code = document.getElementById("orderCodeVisible").textContent; const price = document.getElementById("priceSummary").textContent; if (!code || code.includes("NIEDOSTĘPNA") || !price) { alert("Wystąpił błąd, konfiguracja jest niekompletna lub niedostępna."); return; } navigator.clipboard.writeText(code).then(() => { alert(`✅ Kod zamówienia skopiowany: ${code}\n\n🔄 Przejdź teraz na Allegro i zamów na kwotę ${price}\n📋 W „Uwagi do zakupu” wklej skopiowany kod zamówienia.`); window.open("https://allegro.pl/oferta/zaprojektuj-wlasna-polke-podaj-wymiar-i-wybierz-kolory-do-kuchni-pokoju-17253898746", "_blank"); }).catch(err => { console.error('Błąd kopiowania: ', err); alert('Błąd kopiowania kodu.'); }); }
         function downloadOrderSummary() { const shelfType = document.getElementById("shelfTypeSummary").textContent; const mugShelfMount = shelfType === 'Półka na kubki' ? document.getElementById("mugShelfMountSummary").textContent : ''; const width = document.getElementById("widthSummary").textContent; const height = document.getElementById("heightSummary").textContent; const depth = document.getElementById("depthSummary").textContent; const sideColor = document.getElementById("sideColorSummary").textContent; const shelfColor = document.getElementById("shelfColorSummary").textContent; const shelfCount = document.getElementById("shelfCountSummary").textContent; const gap = document.getElementById("gapSummary").textContent; const extraOptions = document.getElementById("extraOptionsSummary").textContent; const price = document.getElementById("priceSummary").textContent; const orderCode = document.getElementById("orderCodeVisible").textContent; if (!orderCode || orderCode.includes("NIEDOSTĘPNA") || !price) { alert("Wystąpił błąd, konfiguracja jest niekompletna lub niedostępna."); return; } let content = `📦 Podsumowanie Zamówienia\n\n* Rodzaj półki: ${shelfType}\n`; if (mugShelfMount) { content += `* Montaż: ${mugShelfMount}\n`; } content += `* Szerokość: ${width}\n* Wysokość: ${height}\n* Głębokość: ${depth}\n\n* Kolor boków: ${sideColor}\n* Kolor półek i podstaw: ${shelfColor}\n\n* Ilość półek wewn.: ${shelfCount}\n* Odległość między półkami: ${gap}\n* Opcje dodatkowe: ${extraOptions}\n\n* Materiał: płyta laminowana gr. 1,8 cm\n* Termin realizacji: 5‑7 dni roboczych\n\nCena: ${price}\nKod zamówienia: ${orderCode}`; const blob = new Blob([content], { type: "text/plain;charset=utf-8" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `zamowienie-${orderCode}.txt`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
@@ -743,6 +830,7 @@
             heightLabel = document.getElementById('heightLabel'); depthLabel = document.getElementById('depthLabel'); sideColorSelect = document.getElementById('sideColor'); shelfColorSelect = document.getElementById('shelfColor'); mugShelfSpecificOptionsContainer = document.getElementById('mugShelfSpecificOptionsContainer'); mugShelfMountOptionsDiv = document.getElementById('mugShelfMountOptions'); mugShelfDividersOptionsDiv = document.getElementById('mugShelfDividersOptions'); dividersTopCheckbox = document.getElementById('dividersTop'); dividersMiddleCheckbox = document.getElementById('dividersMiddle'); dividersBottomCheckbox = document.getElementById('dividersBottom'); loadOrderCodeInput = document.getElementById('loadOrderCodeInput'); loadOrderCodeButton = document.getElementById('loadOrderCodeButton'); configuratorSection = document.getElementById('configuratorSection'); shelfCountSection = document.getElementById('shelfCountSection'); galleryTabsContainer = document.getElementById('galleryTabsContainer'); galleryGridContainer = document.getElementById('galleryGridContainer'); galleryImageArea = document.getElementById('galleryImageArea'); galleryPrevArrow = document.querySelector('.gallery-prev-arrow'); galleryNextArrow = document.querySelector('.gallery-next-arrow'); modalOverlay = document.getElementById('modalOverlay'); show3dButton = document.getElementById('show3dButton');
             collapse3dPanelButton = document.getElementById('collapse3dPanelButton');
             footerPriceTextElement = document.getElementById('footerPriceText');
+            selectionCompleteIndicator = document.getElementById('selectionCompleteIndicator'); // Przypisanie elementu галочки
 
             // Zapisz oryginalne opcje selectów
             if(widthSelect) originalWidthOptions = Array.from(widthSelect.options).map(opt => ({value: opt.value, text: opt.text}));
@@ -782,12 +870,22 @@
             <span>Półki</span>
         </button>
         <button id="show3dButton" title="Pokaż/ukryj podgląd 3D">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9.75l-9 5.25M12 21v-9.75" /> </svg>
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="animate-spin-slow">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9.75l-9 5.25M12 21v-9.75" />
+             </svg>
             <span>3D</span>
         </button>
-        <div id="footerPriceDisplay" class="text-white px-1" onclick="scrollToBottom()" title="Przewiń na dół strony">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /> <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /> </svg>
-             <span id="footerPriceText"></span>
+         <div id="footerPriceDisplay" class="text-white px-1 flex items-center justify-center" onclick="scrollToBottom()" title="Przewiń na dół strony">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            </svg>
+             <span id="footerPriceText" class="mx-1"></span>
+             <span id="selectionCompleteIndicator" style="display: none;" title="Konfiguracja kompletna">
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-white">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                 </svg>
+             </span>
         </div>
     </div>
     </body>
