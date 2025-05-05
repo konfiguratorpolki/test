@@ -765,19 +765,39 @@
             const height = heightSelect.value;
             const shelfType = shelfTypeSelect.value;
             const currentValue = shelfCountSelect.value;
+
             let options = { '0': 'brak półek' };
-             if (!height || height === "") { shelfCountSelect.innerHTML = '<option value="">-- Wybierz --</option>'; shelfCountSelect.value = ""; return; }
-            if (shelfType === 'mug_shelf') { return; }
-            else {
-                 if (height === "40") options['2'] = '2 półki';
-                 else if (height === "60") { options['2'] = '2 półki'; options['3'] = '3 półki'; }
-                 else if (height === "80") { options['2'] = '2 półki'; options['3'] = '3 półki'; options['4'] = '4 półki'; options['5'] = '5 półki'; }
+
+            if (!height || height === "" || shelfType === 'mug_shelf') {
+                shelfCountSelect.innerHTML = '';
+                if (!height || height === "") {
+                     const option = document.createElement('option');
+                     option.value = '0';
+                     option.textContent = 'brak półek';
+                     shelfCountSelect.appendChild(option);
+                     shelfCountSelect.value = '0';
+                }
+                return;
             }
-            shelfCountSelect.innerHTML = '<option value="">-- Wybierz --</option>';
+
+            if (height === "40") options['2'] = '2 półki';
+            else if (height === "60") { options['2'] = '2 półki'; options['3'] = '3 półki'; }
+            else if (height === "80") { options['2'] = '2 półki'; options['3'] = '3 półki'; options['4'] = '4 półki'; options['5'] = '5 półki'; }
+
+            shelfCountSelect.innerHTML = '';
+
             for (const value in options) {
-                 const option = document.createElement('option'); option.value = value; option.textContent = options[value]; shelfCountSelect.appendChild(option);
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = options[value];
+                shelfCountSelect.appendChild(option);
             }
-            shelfCountSelect.value = options.hasOwnProperty(currentValue) ? currentValue : "";
+
+            if (options.hasOwnProperty(currentValue)) {
+                shelfCountSelect.value = currentValue;
+            } else {
+                 shelfCountSelect.value = '0';
+            }
         }
         function checkCustomWidth() {
              const isCustom = widthSelect.value === 'custom';
@@ -1026,47 +1046,60 @@
             viewOrderCodeInput = document.getElementById('viewOrderCodeInput'); orderDetailsModalOverlay = document.getElementById('orderDetailsModalOverlay'); orderDetailsModal = document.getElementById('orderDetailsModal'); modalCloseButton = orderDetailsModal ? orderDetailsModal.querySelector('.modal-close-button') : null; modalOrderCodeSpan = document.getElementById('modalOrderCode'); modalOrderSummaryP = document.getElementById('modalOrderSummary');
              if(widthSelect) originalWidthOptions = Array.from(widthSelect.options).map(opt => ({value: opt.value, text: opt.text})).filter(opt => opt.value !== ""); if(heightSelect) originalHeightOptions = Array.from(heightSelect.options).map(opt => ({value: opt.value, text: opt.text})).filter(opt => opt.value !== "");
             try {
-                 if (shelfTypeSelect) shelfTypeSelect.value = "standing"; if(typeof handleShelfTypeChange === 'function') { handleShelfTypeChange(false); } else { console.error("handleShelfTypeChange is not defined"); } if(typeof init3D === 'function') init3D(); else console.error("init3D is not defined"); if(typeof updateSwatchDisplay === 'function') { updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay'); updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay'); } else console.error("updateSwatchDisplay is not defined"); updateOrderSummary(); if(typeof initializeTabbedGallery === 'function') initializeTabbedGallery(); else console.error("initializeTabbedGallery is not defined"); if(typeof initialize3dPanel === 'function') initialize3dPanel(); else console.error("initialize3dPanel is not defined"); if(typeof initializeReviews === 'function') initializeReviews(); else console.error("initializeReviews is not defined"); console.log("Główne inicjalizacje zakończone.");
-                 const detailsPanel = document.getElementById('materialSamplesDetails'); if (detailsPanel) { detailsPanel.addEventListener('toggle', function initMaterialSwiperOnToggle() { if (detailsPanel.open && !materialSwiperInstance) { if (typeof Swiper === 'undefined') { console.error("Swiper library not loaded!"); return; } try { materialSwiperInstance = new Swiper('#materialSwiper', { slidesPerView: 1, spaceBetween: 10, navigation: { nextEl: '.material-swiper-button-next', prevEl: '.material-swiper-button-prev' }, observer: true, observeParents: true }); } catch (swiperError) { console.error("Błąd inicjalizacji Swipera:", swiperError); } } else if (detailsPanel.open && materialSwiperInstance) { materialSwiperInstance.update(); } }); document.addEventListener('click', function(event) { if (detailsPanel.open && !detailsPanel.contains(event.target)) { detailsPanel.open = false; } }); } else { console.warn("Element panelu próbek (#materialSamplesDetails) nie znaleziony."); }
-                 const formElementsToMonitor = document.querySelectorAll('#shelfType, #width, #customWidthInput, #height, #depth, #shelfCount, #sideColor, #shelfColor'); formElementsToMonitor.forEach(element => { const eventType = (element.type === 'range') ? 'input' : 'change'; element.addEventListener(eventType, closeDetailsPanelIfNeeded); }); const configPanelContainer = document.querySelector('.w-full.md\\:w-1\\/3.space-y-8'); if (configPanelContainer) { configPanelContainer.addEventListener('change', function(event) { if (event.target.matches('#shelfTypeOptions input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="radio"]')) { closeDetailsPanelIfNeeded(); } }); } else { document.body.addEventListener('change', function(event) { if (event.target.matches('#noTopShelf, #noBottomShelf, #dividersTop, #dividersMiddle, #dividersBottom, input[name="mugShelfMount"]')) { closeDetailsPanelIfNeeded(); } }); }
-                 if (viewOrderCodeInput) {
-                     viewOrderCodeInput.addEventListener('paste', (event) => {
-                         const pastedText = (event.clipboardData || window.clipboardData).getData('text');
-                         if (pastedText && pastedText.trim().length > 0) {
-                             setTimeout(() => {
-                                 const details = parseOrderCode(viewOrderCodeInput.value);
-                                 displayOrderDetailsInModal(details);
-                                 viewOrderCodeInput.blur(); // <-- DODANA LINIA
-                             }, 50);
-                         }
-                     });
-                     viewOrderCodeInput.addEventListener('input', (event) => {
-                         const code = event.target.value.trim();
-                         if (code.length >= 15 && code.includes('-')) {
-                             const details = parseOrderCode(code);
-                             if (!details.error || (details.error && code.length > 5)) {
-                                 displayOrderDetailsInModal(details);
-                                 viewOrderCodeInput.blur(); // <-- DODANA LINIA
-                             }
-                         }
-                     });
-                     viewOrderCodeInput.addEventListener('keydown', (event) => {
-                         if (event.key === 'Enter') {
-                             event.preventDefault();
-                             const code = viewOrderCodeInput.value.trim();
-                             if (code) {
-                                 const details = parseOrderCode(code);
-                                 displayOrderDetailsInModal(details);
-                                 viewOrderCodeInput.blur(); // <-- DODANA LINIA
-                             }
-                         }
-                     });
-                 } else {
-                     console.error("Nie znaleziono elementu #viewOrderCodeInput.");
+            if (shelfTypeSelect) {
+                shelfTypeSelect.value = "";
+            }
+            if (widthSelect && Array.from(widthSelect.options).some(opt => opt.value === '44')) {
+                 widthSelect.value = "44";
+                 if (typeof checkCustomWidth === 'function') {
+                    checkCustomWidth();
                  }
-                 if (modalCloseButton) { modalCloseButton.addEventListener('click', closeOrderDetailsModal); } else { console.error("Nie znaleziono przycisku zamykania modala."); }
-                 if (orderDetailsModalOverlay) { orderDetailsModalOverlay.addEventListener('click', (event) => { if (event.target === orderDetailsModalOverlay) { closeOrderDetailsModal(); } }); } else { console.error("Nie znaleziono elementu #orderDetailsModalOverlay."); }
-             } catch (error) { console.error("Błąd inicjalizacji w DOMContentLoaded:", error); const body = document.querySelector('body'); if (body) { const errorMsg = document.createElement('p'); errorMsg.textContent = "Wystąpił błąd podczas ładowania strony. Spróbuj odświeżyć."; errorMsg.className = "text-red-600 font-bold text-center p-4 bg-red-100"; body.prepend(errorMsg); } }
+            }
+            if (heightSelect && Array.from(heightSelect.options).some(opt => opt.value === '40')) {
+                 heightSelect.value = "40";
+            }
+            if (typeof updateDepthOptions === 'function') {
+                updateDepthOptions();
+            }
+            if (depthSelect && Array.from(depthSelect.options).some(opt => opt.value === '10')) {
+                 depthSelect.value = "10";
+            }
+            if (typeof updateShelfCountOptions === 'function') {
+                updateShelfCountOptions();
+            }
+            if (shelfCountSelect && Array.from(shelfCountSelect.options).some(opt => opt.value === '0')) {
+                 shelfCountSelect.value = "0";
+            }
+            if(typeof init3D === 'function') init3D(); else console.error("init3D is not defined");
+            if(typeof updateSwatchDisplay === 'function') {
+                updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay');
+                updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay');
+            } else console.error("updateSwatchDisplay is not defined");
+            updatePreview();
+            updateOrderSummary();
+            if(typeof initializeTabbedGallery === 'function') initializeTabbedGallery(); else console.error("initializeTabbedGallery is not defined");
+            if(typeof initialize3dPanel === 'function') initialize3dPanel(); else console.error("initialize3dPanel is not defined");
+            if(typeof initializeReviews === 'function') initializeReviews(); else console.error("initializeReviews is not defined");
+            console.log("Główne inicjalizacje zakończone (metoda bezpośrednia).");
+            const detailsPanel = document.getElementById('materialSamplesDetails'); if (detailsPanel) { detailsPanel.addEventListener('toggle', function initMaterialSwiperOnToggle() { if (detailsPanel.open && !materialSwiperInstance) { if (typeof Swiper === 'undefined') { console.error("Swiper library not loaded!"); return; } try { materialSwiperInstance = new Swiper('#materialSwiper', { slidesPerView: 1, spaceBetween: 10, navigation: { nextEl: '.material-swiper-button-next', prevEl: '.material-swiper-button-prev' }, observer: true, observeParents: true }); } catch (swiperError) { console.error("Błąd inicjalizacji Swipera:", swiperError); } } else if (detailsPanel.open && materialSwiperInstance) { materialSwiperInstance.update(); } }); document.addEventListener('click', function(event) { if (detailsPanel.open && !detailsPanel.contains(event.target)) { detailsPanel.open = false; } }); } else { console.warn("Element panelu próbek (#materialSamplesDetails) nie znaleziony."); }
+            const formElementsToMonitor = document.querySelectorAll('#shelfType, #width, #customWidthInput, #height, #depth, #shelfCount, #sideColor, #shelfColor'); formElementsToMonitor.forEach(element => { const eventType = (element.type === 'range') ? 'input' : 'change'; element.addEventListener(eventType, closeDetailsPanelIfNeeded); }); const configPanelContainer = document.querySelector('.w-full.md\\:w-1\\/3.space-y-8'); if (configPanelContainer) { configPanelContainer.addEventListener('change', function(event) { if (event.target.matches('#shelfTypeOptions input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="radio"]')) { closeDetailsPanelIfNeeded(); } }); } else { document.body.addEventListener('change', function(event) { if (event.target.matches('#noTopShelf, #noBottomShelf, #dividersTop, #dividersMiddle, #dividersBottom, input[name="mugShelfMount"]')) { closeDetailsPanelIfNeeded(); } }); }
+            if (viewOrderCodeInput) { viewOrderCodeInput.addEventListener('paste', (event) => { const pastedText = (event.clipboardData || window.clipboardData).getData('text'); if (pastedText && pastedText.trim().length > 0) { setTimeout(() => { const details = parseOrderCode(viewOrderCodeInput.value); displayOrderDetailsInModal(details); viewOrderCodeInput.blur(); }, 50); } }); viewOrderCodeInput.addEventListener('input', (event) => { const code = event.target.value.trim(); if (code.length >= 15 && code.includes('-')) { const details = parseOrderCode(code); if (!details.error || (details.error && code.length > 5)) { displayOrderDetailsInModal(details); viewOrderCodeInput.blur(); } } }); viewOrderCodeInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); const code = viewOrderCodeInput.value.trim(); if (code) { const details = parseOrderCode(code); displayOrderDetailsInModal(details); viewOrderCodeInput.blur(); } } }); } else { console.error("Nie znaleziono elementu #viewOrderCodeInput."); }
+            if (modalCloseButton) { modalCloseButton.addEventListener('click', closeOrderDetailsModal); } else { console.error("Nie znaleziono przycisku zamykania modala."); }
+            if (orderDetailsModalOverlay) { orderDetailsModalOverlay.addEventListener('click', (event) => { if (event.target === orderDetailsModalOverlay) { closeOrderDetailsModal(); } }); } else { console.error("Nie znaleziono elementu #orderDetailsModalOverlay."); }
+            if (window.innerWidth < 768) { const reviewBlock = document.getElementById('customerReview')?.parentElement; const summarySection = document.querySelector('.w-full.md\\:w-1\\/3.order-3'); if (reviewBlock && summarySection && reviewBlock.parentElement !== summarySection) { summarySection.appendChild(reviewBlock); console.log("Przeniesiono blok opinii na koniec sekcji podsumowania na mobile."); } }
+             // === POCZĄTEK: Logika dla dymka podpowiedzi (Część 3) ===
+             // (Tutaj zostanie dodany kod JS w Części 3)
+             // === KONIEC: Logika dla dymka podpowiedzi (Część 3) ===
+         } catch (error) {
+             console.error("Błąd inicjalizacji w DOMContentLoaded:", error);
+             const body = document.querySelector('body');
+             if (body) {
+                 const errorMsg = document.createElement('p');
+                 errorMsg.textContent = "Wystąpił błąd podczas ładowania strony. Spróbuj odświeżyć.";
+                 errorMsg.className = "text-red-600 font-bold text-center p-4 bg-red-100";
+                 body.prepend(errorMsg);
+             }
+         }
              if (window.innerWidth < 768) { const reviewBlock = document.getElementById('customerReview')?.parentElement; const summarySection = document.querySelector('.w-full.md\\:w-1\\/3.order-3'); if (reviewBlock && summarySection && reviewBlock.parentElement !== summarySection) { summarySection.appendChild(reviewBlock); console.log("Przeniesiono blok opinii na koniec sekcji podsumowania na mobile."); } }
         });
     </script>
