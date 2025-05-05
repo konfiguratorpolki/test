@@ -613,7 +613,8 @@
                  Obróć lub zbliż model (przeciągnij myszką)
              </div>
 
-             <div id="shelfCountSection" class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md mt-8 w-full max-w-lg">
+             <div id="shelfCountSection" class="p-6 shadow rounded-lg bg-white border border-stone-200 transition-shadow duration-200 hover:shadow-md mt-0,1 md:mt-8
+ w-full max-w-lg">
                 <h2 class="text-lg font-semibold mb-4 flex items-center text-stone-800">
                     <svg class="h-6 w-6 mr-2 text-green-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5M3.75 15h16.5" />
@@ -1028,7 +1029,41 @@
                  if (shelfTypeSelect) shelfTypeSelect.value = "standing"; if(typeof handleShelfTypeChange === 'function') { handleShelfTypeChange(false); } else { console.error("handleShelfTypeChange is not defined"); } if(typeof init3D === 'function') init3D(); else console.error("init3D is not defined"); if(typeof updateSwatchDisplay === 'function') { updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay'); updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay'); } else console.error("updateSwatchDisplay is not defined"); updateOrderSummary(); if(typeof initializeTabbedGallery === 'function') initializeTabbedGallery(); else console.error("initializeTabbedGallery is not defined"); if(typeof initialize3dPanel === 'function') initialize3dPanel(); else console.error("initialize3dPanel is not defined"); if(typeof initializeReviews === 'function') initializeReviews(); else console.error("initializeReviews is not defined"); console.log("Główne inicjalizacje zakończone.");
                  const detailsPanel = document.getElementById('materialSamplesDetails'); if (detailsPanel) { detailsPanel.addEventListener('toggle', function initMaterialSwiperOnToggle() { if (detailsPanel.open && !materialSwiperInstance) { if (typeof Swiper === 'undefined') { console.error("Swiper library not loaded!"); return; } try { materialSwiperInstance = new Swiper('#materialSwiper', { slidesPerView: 1, spaceBetween: 10, navigation: { nextEl: '.material-swiper-button-next', prevEl: '.material-swiper-button-prev' }, observer: true, observeParents: true }); } catch (swiperError) { console.error("Błąd inicjalizacji Swipera:", swiperError); } } else if (detailsPanel.open && materialSwiperInstance) { materialSwiperInstance.update(); } }); document.addEventListener('click', function(event) { if (detailsPanel.open && !detailsPanel.contains(event.target)) { detailsPanel.open = false; } }); } else { console.warn("Element panelu próbek (#materialSamplesDetails) nie znaleziony."); }
                  const formElementsToMonitor = document.querySelectorAll('#shelfType, #width, #customWidthInput, #height, #depth, #shelfCount, #sideColor, #shelfColor'); formElementsToMonitor.forEach(element => { const eventType = (element.type === 'range') ? 'input' : 'change'; element.addEventListener(eventType, closeDetailsPanelIfNeeded); }); const configPanelContainer = document.querySelector('.w-full.md\\:w-1\\/3.space-y-8'); if (configPanelContainer) { configPanelContainer.addEventListener('change', function(event) { if (event.target.matches('#shelfTypeOptions input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="checkbox"], #mugShelfSpecificOptionsContainer input[type="radio"]')) { closeDetailsPanelIfNeeded(); } }); } else { document.body.addEventListener('change', function(event) { if (event.target.matches('#noTopShelf, #noBottomShelf, #dividersTop, #dividersMiddle, #dividersBottom, input[name="mugShelfMount"]')) { closeDetailsPanelIfNeeded(); } }); }
-                 if (viewOrderCodeInput) { viewOrderCodeInput.addEventListener('paste', (event) => { const pastedText = (event.clipboardData || window.clipboardData).getData('text'); if (pastedText && pastedText.trim().length > 0) { setTimeout(() => { const details = parseOrderCode(viewOrderCodeInput.value); displayOrderDetailsInModal(details); }, 50); } }); viewOrderCodeInput.addEventListener('input', (event) => { const code = event.target.value.trim(); if (code.length >= 15 && code.includes('-')) { const details = parseOrderCode(code); if (!details.error || (details.error && code.length > 5)) { displayOrderDetailsInModal(details); } } }); viewOrderCodeInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); const code = viewOrderCodeInput.value.trim(); if (code) { const details = parseOrderCode(code); displayOrderDetailsInModal(details); } } }); } else { console.error("Nie znaleziono elementu #viewOrderCodeInput."); }
+                 if (viewOrderCodeInput) {
+                     viewOrderCodeInput.addEventListener('paste', (event) => {
+                         const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+                         if (pastedText && pastedText.trim().length > 0) {
+                             setTimeout(() => {
+                                 const details = parseOrderCode(viewOrderCodeInput.value);
+                                 displayOrderDetailsInModal(details);
+                                 viewOrderCodeInput.blur(); // <-- DODANA LINIA
+                             }, 50);
+                         }
+                     });
+                     viewOrderCodeInput.addEventListener('input', (event) => {
+                         const code = event.target.value.trim();
+                         if (code.length >= 15 && code.includes('-')) {
+                             const details = parseOrderCode(code);
+                             if (!details.error || (details.error && code.length > 5)) {
+                                 displayOrderDetailsInModal(details);
+                                 viewOrderCodeInput.blur(); // <-- DODANA LINIA
+                             }
+                         }
+                     });
+                     viewOrderCodeInput.addEventListener('keydown', (event) => {
+                         if (event.key === 'Enter') {
+                             event.preventDefault();
+                             const code = viewOrderCodeInput.value.trim();
+                             if (code) {
+                                 const details = parseOrderCode(code);
+                                 displayOrderDetailsInModal(details);
+                                 viewOrderCodeInput.blur(); // <-- DODANA LINIA
+                             }
+                         }
+                     });
+                 } else {
+                     console.error("Nie znaleziono elementu #viewOrderCodeInput.");
+                 }
                  if (modalCloseButton) { modalCloseButton.addEventListener('click', closeOrderDetailsModal); } else { console.error("Nie znaleziono przycisku zamykania modala."); }
                  if (orderDetailsModalOverlay) { orderDetailsModalOverlay.addEventListener('click', (event) => { if (event.target === orderDetailsModalOverlay) { closeOrderDetailsModal(); } }); } else { console.error("Nie znaleziono elementu #orderDetailsModalOverlay."); }
              } catch (error) { console.error("Błąd inicjalizacji w DOMContentLoaded:", error); const body = document.querySelector('body'); if (body) { const errorMsg = document.createElement('p'); errorMsg.textContent = "Wystąpił błąd podczas ładowania strony. Spróbuj odświeżyć."; errorMsg.className = "text-red-600 font-bold text-center p-4 bg-red-100"; body.prepend(errorMsg); } }
