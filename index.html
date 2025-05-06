@@ -327,7 +327,7 @@
             padding: 0.25rem;
             transition: color 0.2s ease, transform 0.1s ease;
         }
-        .modal-close-button:hover {
+.modal-close-button:hover {
             color: #374151; /* Ciemniejszy kolor X na hover */
         }
          .modal-close-button:active {
@@ -395,20 +395,22 @@
             border-color: #d1d5db; /* Subtle border on hover if not active */
         }
         .gallery-tile.gallery-tile--active {
-            border-color: #16A34A; /* Green accent color for active */
+            /* border-color: #16A34A; */ /* Green accent color for active - ZAKOMENTOWANE ZGODNIE Z PROŚBĄ */
             box-shadow: 0 8px 25px rgba(22, 163, 74, 0.25), 0 3px 10px rgba(22, 163, 74, 0.15); /* Greenish shadow for active */
             transform: translateY(-2px) scale(1.01); /* Slight lift for active state */
             opacity: 1 !important;
         }
-        /* Optional: Dim non-active tiles when one is selected */
+        
+        /* CAŁY BLOK ZAKOMENTOWANY ZGODNIE Z PROŚBĄ - ABY WSZYSTKIE ZDJĘCIA BYŁY WYRAŹNE
         .gallery-grid.has-active-tile .gallery-tile:not(.gallery-tile--active) {
-            opacity: 0.65; /* Dim non-active items a bit more */
+            opacity: 0.65; 
         }
         .gallery-grid.has-active-tile .gallery-tile:not(.gallery-tile--active):hover {
-            opacity: 0.85; /* Make them slightly more visible on hover when dimmed */
-            transform: translateY(-3px) scale(1.01); /* Still give a little hover feedback */
+            opacity: 0.85; 
+            transform: translateY(-3px) scale(1.01); 
             border-color: #e5e7eb;
         }
+        */
 
         .gallery-image-container {
             position: relative;
@@ -419,7 +421,6 @@
             background: #fff;
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
             transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            /* Removed cursor: pointer from here, moved to .gallery-tile */
         }
         .gallery-tile:hover .gallery-image-container {
              /* Minor enhancement for image container on tile hover if needed, but primary on tile */
@@ -430,22 +431,22 @@
         .gallery-image-container img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Changed from cover to contain if that's better for shelves */
+            object-fit: contain; 
             background: #fff;
-            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smooth image zoom */
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); 
         }
         .gallery-tile:hover .gallery-image-container img {
-            transform: scale(1.05); /* Slight zoom on image as well */
+            transform: scale(1.05); 
         }
 
         .config-btn {
             position: absolute;
-            bottom: 8px; /* Adjusted position */
+            bottom: 8px; 
             right: 8px;
-            width: 40px; /* Slightly larger */
+            width: 40px; 
             height: 40px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.85); /* Slightly more opaque */
+            background: rgba(255, 255, 255, 0.85); 
             backdrop-filter: blur(3px);
             display: flex;
             justify-content: center;
@@ -454,55 +455,55 @@
             cursor: pointer;
             opacity: 0;
             pointer-events: none;
-            transform: scale(0.8); /* Start smaller for a pop-in effect */
-            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; /* Added background transition */
+            transform: scale(0.8); 
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; 
             z-index: 5;
         }
-        .gallery-tile:hover .config-btn { /* Changed from .gallery-image-container:hover */
+        .gallery-tile:hover .config-btn { 
             opacity: 1;
             pointer-events: auto;
             transform: scale(1);
         }
         .config-btn:hover {
-            background: rgba(22, 163, 74, 0.85); /* Green background on hover */
-            transform: scale(1.1); /* Slightly larger on hover */
+            background: rgba(22, 163, 74, 0.85); 
+            transform: scale(1.1); 
         }
         .config-btn:hover svg {
-            stroke: #ffffff; /* White icon on green background */
-            animation-play-state: running; /* Keep animation running */
+            stroke: #ffffff; 
+            animation-play-state: running; 
         }
         .config-btn svg {
             stroke: #374151;
             fill: none;
             stroke-width: 1.6;
             animation: gallery-spin 2.5s linear infinite paused;
-            width: 22px; /* Adjusted size */
+            width: 22px; 
             height: 22px;
             transition: stroke 0.2s ease;
         }
-        .gallery-tile:hover .config-btn svg { /* Ensure animation plays on tile hover as well */
+        .gallery-tile:hover .config-btn svg { 
             animation-play-state: running;
         }
 
         .gallery-caption {
-            margin-top: 8px; /* Increased margin */
-            font-size: .8em; /* Slightly larger */
+            margin-top: 8px; 
+            font-size: .8em; 
             font-weight: 500;
-            color: #57534E; /* Darker text */
+            color: #57534E; 
             opacity: 0;
-            transform: translateY(5px); /* Start slightly lower for animation */
-            transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s; /* Delayed transition */
+            transform: translateY(5px); 
+            transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s; 
             text-align: center;
             width: 100%;
         }
-        .gallery-tile:hover .gallery-caption { /* Changed from .gallery-image-container:hover */
+        .gallery-tile:hover .gallery-caption { 
             opacity: 1;
             transform: translateY(0);
         }
         /* --- End of Styles for Enhanced Gallery Interaction --- */
 
 
-        .gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; /* Larger arrows */ height: 40px; font-size: 20px; background: #fff; border: 1px solid #e0e0e0; border-radius: 50%; box-shadow: 0 2px 6px rgb(0 0 0 / .12); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; pointer-events: none; transition: background .2s, box-shadow .2s, opacity .3s, transform 0.2s ease-out; z-index: 10; color: #374151; }
+        .gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; font-size: 20px; background: #fff; border: 1px solid #e0e0e0; border-radius: 50%; box-shadow: 0 2px 6px rgb(0 0 0 / .12); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; pointer-events: none; transition: background .2s, box-shadow .2s, opacity .3s, transform 0.2s ease-out; z-index: 10; color: #374151; }
         .gallery-content-wrapper:hover .gallery-arrow { opacity: 1; pointer-events: auto; }
         .gallery-arrow:hover { background: #f0f0f0; box-shadow: 0 3px 9px rgb(0 0 0 /.18); transform: translateY(-50%) scale(1.05); color: #16A34A; }
         .gallery-arrow:active { transform: translateY(-50%) scale(0.95); background: #e7e7e7;}
@@ -511,7 +512,7 @@
 
         #stickyFooterBar { transform: translateY(0); transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; padding: 0.5rem 0.25rem; height: 60px; z-index: 990; }
         #stickyFooterBar > * { background: none; border: none; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-size: 0.75rem; line-height: 1rem; text-align: center; flex-grow: 1; flex-basis: 0; height: 100%; transition: background-color 0.15s ease-in-out; min-width: 0; cursor: pointer; }
-#stickyFooterBar > *:hover,
+        #stickyFooterBar > *:hover,
         #stickyFooterBar > *:focus { background-color: rgba(255, 255, 255, 0.1); outline: none; border-radius: 0.25rem; }
         #stickyFooterBar button svg,
         #stickyFooterBar #footerPriceDisplay svg { width: 1.5rem; height: 1.5rem; margin-bottom: 0.125rem; pointer-events: none; }
@@ -589,8 +590,7 @@
                </div>
         </details>
     </div>
-
-    <div id="tabbedGalleryContainer" class="w-full max-w-7xl mx-auto px-4 md:px-6">
+<div id="tabbedGalleryContainer" class="w-full max-w-7xl mx-auto px-4 md:px-6">
         <div class="gallery-tabs" id="galleryTabsContainer">
             </div>
         <div class="gallery-content-wrapper">
@@ -828,7 +828,6 @@
             </div>
     </div>
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
 // --- Zmienne globalne i elementy DOM ---
         let scene, camera, renderer, shelfGroup, controls;
@@ -839,7 +838,7 @@
         let heightLabel, depthLabel, sideColorSelect, shelfColorSelect;
         let mugShelfSpecificOptionsContainer, mugShelfMountOptionsDiv, mugShelfDividersOptionsDiv;
         let dividersTopCheckbox, dividersMiddleCheckbox, dividersBottomCheckbox;
-        let configuratorSection, shelfCountSection; 
+        let configuratorSection, shelfCountSection;
         let galleryTabsContainer, galleryGridContainer, galleryImageArea, galleryPrevArrow, galleryNextArrow;
         let show3dButton, collapse3dPanelButton;
         let footerPriceTextElement, selectionCompleteIndicator;
@@ -956,7 +955,7 @@
 
 
         function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
-        
+
         // ZMODYFIKOWANA Funkcja inicjalizacji galerii z zakładkami
         function initializeTabbedGallery() {
             if (!galleryTabsContainer || !galleryGridContainer || !galleryImageArea || !configuratorSection || !galleryPrevArrow || !galleryNextArrow) {
@@ -970,7 +969,7 @@
 
             const displayImages = (galleryIndex) => {
                 galleryGridContainer.innerHTML = ''; // Wyczyść poprzednie obrazki
-                galleryGridContainer.classList.remove('has-active-tile'); // Usuń klasę pomocniczą przy zmianie zawartości
+                // galleryGridContainer.classList.remove('has-active-tile'); // USUNIĘTE/ZAKOMENTOWANE ZGODNIE Z PROŚBĄ
                 const images = galleryData[galleryIndex].imgs;
                 const fragment = document.createDocumentFragment();
 
@@ -1008,7 +1007,7 @@
                         const allTiles = galleryGridContainer.querySelectorAll('.gallery-tile');
                         allTiles.forEach(t => t.classList.remove('gallery-tile--active'));
                         tileDiv.classList.add('gallery-tile--active');
-                        galleryGridContainer.classList.add('has-active-tile'); // Dodaj klasę do rodzica
+                        // galleryGridContainer.classList.add('has-active-tile'); // USUNIĘTE/ZAKOMENTOWANE ZGODNIE Z PROŚBĄ
                         scrollToConfig(); // Przewiń do konfiguratora
                         // TODO (Opcjonalnie w przyszłości): Załaduj konfigurację `imgConfig` do formularza
                     };
@@ -1039,10 +1038,10 @@
                 tab.addEventListener('click', () => {
                     galleryTabsContainer.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    // Ważne: Przy zmianie zakładki, usuń zaznaczenie i klasę pomocniczą
+                    // Ważne: Przy zmianie zakładki, usuń zaznaczenie
                     const allTilesInGrid = galleryGridContainer.querySelectorAll('.gallery-tile');
                     allTilesInGrid.forEach(item => item.classList.remove('gallery-tile--active'));
-                    galleryGridContainer.classList.remove('has-active-tile');
+                    // galleryGridContainer.classList.remove('has-active-tile'); // USUNIĘTE/ZAKOMENTOWANE ZGODNIE Z PROŚBĄ
                     displayImages(index);
                 });
                 galleryTabsContainer.appendChild(tab);
@@ -1059,7 +1058,8 @@
                 displayImages(0); // Wyświetl pierwszą galerię na starcie
             }
         }
-function initializeReviews() {
+
+        function initializeReviews() {
             const reviews = [
                 '"Fantastyczna półeczka, przyszła od razu zmontowana i idealnie pasuje w wielu miejscach. Serdecznie polecam!"',
                 '"Piękna, zgrabna półka. Solidnie wykonana, bez żadnych wad. Polecam!"',
@@ -1102,7 +1102,7 @@ function initializeReviews() {
                 setActiveMobileIcon(null); // Zresetuj aktywną ikonę po zamknięciu panelu
             }
         }
-        
+
         function initialize3dPanel() {
             show3dButton = document.getElementById('show3dButton');
             collapse3dPanelButton = document.getElementById('collapse3dPanelButton'); // Upewnij się, że ten ID jest poprawny
