@@ -359,36 +359,80 @@
         #viewOrderSection input[type="text"] { width: 100%; border-radius: 0.375rem; border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
         #viewOrderSection input[type="text"]:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 1px #10b981; }
         #viewOrderSection input[type="text"]:placeholder-shown { font-style: italic; }
-
-        /* --- Styles for Tabbed Gallery --- */
+/* --- Styles for Tabbed Gallery --- */
         #tabbedGalleryContainer { background-color: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #e5e7eb; }
         .gallery-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem; }
         .gallery-tab { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; color: #57534e; background-color: #f5f5f4; border: 1px solid #e5e7eb; border-radius: 0.375rem; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; white-space: nowrap; }
         .gallery-tab:hover { background-color: #e7e5e4; color: #44403c; }
         .gallery-tab.active { background-color: #16A34A; color: #ffffff; border-color: #15803d; }
         .gallery-content-wrapper { position: relative; width: 100%; overflow: hidden; min-height: 200px; /* Adjusted min-height for better layout */ }
-        .gallery-image-area { overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 12px 2px; /* Increased padding for better spacing with border */ position: relative; }
-        .gallery-image-area::-webkit-scrollbar { display: none; }
-        .gallery-grid { display: flex; gap: 20px; /* Increased gap */ width: max-content; }
+        
+        /* MODIFIED for mobile gallery - added -webkit-overflow-scrolling */
+        .gallery-image-area {
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none; /* Firefox */
+            padding: 12px 2px; /* Increased padding for better spacing with border */
+            position: relative;
+            -webkit-overflow-scrolling: touch; /* For smoother scrolling on iOS */
+        }
+        .gallery-image-area::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+
+        .gallery-grid {
+            display: flex;
+            gap: 20px; /* Default desktop gap, mobile override below */
+            width: max-content;
+        }
 
         /* --- Styles for Enhanced Gallery Interaction --- */
         .gallery-tile {
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 260px;
+            width: 260px; /* Default desktop width */
             flex-shrink: 0;
             transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease-out, opacity 0.3s ease-out;
             border: 3px solid transparent; /* Base for active border, slightly thicker */
             border-radius: 10px; /* Slightly more rounded */
-            padding: 6px; /* Padding to ensure border doesn't overlap content too much */
+            padding: 6px; /* Default desktop padding */
             background-color: #fff; /* Ensure a background for shadow and border to look good */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Softer initial shadow */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Default desktop shadow, mobile override below */
             cursor: pointer;
         }
-         @media (max-width:768px){ .gallery-tile { width: 200px; gap: 15px; padding: 5px;} }
-         @media (max-width:480px){ .gallery-tile { width: 160px; gap: 12px; padding: 4px;} }
+        
+        /* === START: MOBILE GALLERY ENHANCEMENTS === */
+        @media (max-width: 768px) { /* For tablets and larger phones */
+            .gallery-grid {
+                gap: 10px; /* Reduced gap for mobile */
+            }
+            .gallery-tile {
+                width: 280px; /* Increased width for mobile */
+                padding: 4px;   /* Adjusted padding for mobile */
+                box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* Softer, professional shadow for mobile */
+            }
+            /* Height for image container within gallery-tile for this breakpoint */
+            .gallery-image-container { /* Ensured this is separate for clarity, could be combined if only height changes */
+                height: 200px; /* Increased height for mobile */
+            }
+        }
 
+        @media (max-width: 480px) { /* For smaller phones */
+            .gallery-tile {
+                width: 240px; /* Adjusted width for smaller mobile */
+                padding: 3px;   /* Adjusted padding for smaller mobile */
+                /* Shadow will be inherited from the 768px breakpoint or can be re-specified if needed */
+                /* Gap for gallery-grid is also inherited from 768px breakpoint */
+            }
+             /* Height for image container within gallery-tile for this breakpoint */
+            .gallery-image-container { /* Ensured this is separate, could be combined if only height changes */
+                height: 180px; /* Adjusted height for smaller mobile */
+            }
+        }
+        /* === END: MOBILE GALLERY ENHANCEMENTS === */
+
+        /* Original hover and active states for gallery-tile (Desktop and Mobile) */
         .gallery-tile:hover {
             transform: translateY(-5px) scale(1.02); /* Lift and scale on hover */
             box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.08); /* More pronounced shadow on hover */
@@ -415,7 +459,7 @@
         .gallery-image-container {
             position: relative;
             width: 100%;
-            height: 180px;
+            height: 180px; /* Default desktop height, overridden by mobile styles above */
             border-radius: 6px; /* Inherit or set consistent rounding */
             overflow: hidden;
             background: #fff;
@@ -425,8 +469,6 @@
         .gallery-tile:hover .gallery-image-container {
              /* Minor enhancement for image container on tile hover if needed, but primary on tile */
         }
-         @media (max-width:768px){ .gallery-image-container { height: 140px; } }
-         @media (max-width:480px){ .gallery-image-container { height: 110px; } }
 
         .gallery-image-container img {
             width: 100%;
@@ -548,7 +590,6 @@
         /* --- Koniec stylów dla podświetlenia sekcji --- */
 
     </style>
-
 </head>
 <body class="flex flex-col justify-center items-center min-h-screen bg-stone-100 font-sans text-stone-800 pb-20 md:pb-0">
 
