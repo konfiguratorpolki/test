@@ -235,6 +235,13 @@ select.rs:focus{border-color:var(--G)}
       <!-- OBRAZKI Z PIXABAY -->
       <div id="tb-img" style="display:none">
         <div style="display:flex;flex-direction:column;gap:7px">
+          <div id="pxb-key-box" style="background:#1a1a2e;border:1px solid var(--bor);border-radius:8px;padding:8px 10px">
+            <p style="font-size:10px;color:var(--mut);margin-bottom:5px;line-height:1.5">🔑 Klucz API Pixabay (<a href="https://pixabay.com/api/docs/" target="_blank" style="color:var(--G)">pobierz darmowy</a>)</p>
+            <div style="display:flex;gap:5px">
+              <input type="text" id="pxb-key-inp" style="flex:1;background:var(--sur2);border:1px solid var(--bor);color:var(--txt);padding:5px 8px;border-radius:6px;font-size:10px;font-family:'Montserrat',sans-serif;outline:none;margin-bottom:0" placeholder="Wklej klucz API...">
+              <button class="tb g" style="padding:5px 9px;font-size:10px;white-space:nowrap" onclick="savePixabayKey()">Zapisz</button>
+            </div>
+          </div>
           <div style="display:flex;gap:5px">
             <input type="text" id="img-search-inp" style="flex:1;background:var(--sur2);border:1px solid var(--bor);color:var(--txt);padding:6px 9px;border-radius:7px;font-size:11px;font-family:'Montserrat',sans-serif;outline:none;margin-bottom:0" placeholder="np. gwarancja, dostawa..." onkeydown="if(event.key==='Enter')searchImages()">
             <button class="tb g" style="padding:6px 10px;white-space:nowrap" onclick="searchImages()">Szukaj</button>
@@ -1030,8 +1037,21 @@ function updBarFs(v){
 }
 
 // ══ IMAGE SEARCH (Pixabay) ══
-const PIXABAY_KEY='47883471-41a9e0b9ef9f6d3ac2e0b5bd8';
+let PIXABAY_KEY = localStorage.getItem('pxb_key') || '';
+function savePixabayKey(){
+  const v = document.getElementById('pxb-key-inp').value.trim();
+  if(!v){toast('Wklej klucz API!'); return;}
+  PIXABAY_KEY = v;
+  localStorage.setItem('pxb_key', v);
+  document.getElementById('pxb-key-box').style.borderColor = 'var(--G)';
+  toast('✓ Klucz zapisany!');
+}
+function initPixabayKeyUI(){
+  const k = localStorage.getItem('pxb_key');
+  if(k){ PIXABAY_KEY=k; document.getElementById('pxb-key-inp').value=k; document.getElementById('pxb-key-box').style.borderColor='var(--G)'; }
+}
 async function searchImages(){
+  if(!PIXABAY_KEY){toast('Najpierw wpisz klucz API Pixabay!');return;}
   const q=document.getElementById('img-search-inp').value.trim();
   if(!q){toast('Wpisz słowo kluczowe!');return}
   const status=document.getElementById('img-status');
@@ -1177,6 +1197,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 
 // ══ INIT ══
 buildGrids();
+initPixabayKeyUI();
 document.getElementById('cwrap').addEventListener('click',deselAll);
 </script>
 </body>
