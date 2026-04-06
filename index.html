@@ -1747,15 +1747,20 @@ body.no-scroll {
             pointer-events: none;
             border-radius: 6px;
         }
-        .gts-thumb:active {
-            transform: scale(0.9) !important;
-            transition-duration: 0.08s !important;
+        .gts-thumb:active:not(.gts-active) {
+            transform: scale(0.88);
+            transition: transform 0.08s ease !important;
         }
         .gts-thumb.gts-active {
             border-color: #16a34a;
-            transform: scale(1.13);
+            transform: scale(1.12);
             opacity: 1;
             box-shadow: 0 0 0 3px rgba(22,163,74,0.18), 0 2px 8px rgba(22,163,74,0.22);
+            transition:
+                border-color 0.15s ease,
+                transform 0.3s cubic-bezier(.34,1.56,.64,1),
+                box-shadow 0.2s ease,
+                opacity 0.15s ease;
         }
     }
 
@@ -8792,16 +8797,38 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                 track.appendChild(btn);
             });
 
-            // Synchronizuj aktywną miniaturkę ze scrollem galerii
+            // Synchronizuj aktywną miniaturkę ze scrollem galerii — RAF throttle, bez jitter
+            let _lastThumbIdx = 0;
+            let _thumbRafPending = false;
+
             const updateActive = () => {
-                const step2 = _galTileStep();
-                const idx = Math.round(galleryImageArea.scrollLeft / step2);
-                track.querySelectorAll('.gts-thumb').forEach((b, bi) => {
-                    b.classList.toggle('gts-active', bi === idx);
+                if (_thumbRafPending) return;
+                _thumbRafPending = true;
+                requestAnimationFrame(() => {
+                    _thumbRafPending = false;
+                    const step2 = _galTileStep();
+                    if (!step2) return;
+                    const raw = galleryImageArea.scrollLeft / step2;
+                    const idx = Math.round(raw);
+                    const clampedIdx = Math.max(0, Math.min(idx, track.children.length - 1));
+
+                    if (clampedIdx !== _lastThumbIdx) {
+                        _lastThumbIdx = clampedIdx;
+                        Array.from(track.children).forEach((b, bi) => {
+                            b.classList.toggle('gts-active', bi === clampedIdx);
+                        });
+                        // centruj aktywną w pasku przez scrollTo — bez scrollIntoView (powoduje jitter)
+                        const activeBtn = track.children[clampedIdx];
+                        if (activeBtn) {
+                            const stripEl = document.getElementById('galleryThumbStrip');
+                            if (stripEl) {
+                                const btnCenter = activeBtn.offsetLeft + activeBtn.offsetWidth / 2;
+                                const stripCenter = stripEl.offsetWidth / 2;
+                                stripEl.scrollTo({ left: btnCenter - stripCenter, behavior: 'smooth' });
+                            }
+                        }
+                    }
                 });
-                // przewiń pasek miniaturek żeby aktywna była widoczna
-                const activeBtn = track.children[idx];
-                if (activeBtn) activeBtn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
             };
 
             if (!galleryImageArea._thumbStripListener) {
