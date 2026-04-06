@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlay — szkice v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f4f2ef;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 28px 20px 40px;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 12px; font-weight: 600; color: #999; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 24px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 680px;
+  }
+  .card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.09); }
+  .card-info { padding: 12px 14px 14px; }
+  .card-label { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 4px; }
+  .card-sub   { font-size: 11px; color: #888; line-height: 1.5; }
+
+  .tile {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: #ddd;
+  }
+  .tile img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* ══════════════════════════════════════
+     A — Dwie maleńkie pigułki top-right
+     zawsze widoczne, nie zakrywają zdjęcia
+  ══════════════════════════════════════ */
+  .ov-a {
+    position: absolute;
+    top: 10px; right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ov-a-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px 5px 7px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #222;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+    letter-spacing: .02em;
+    white-space: nowrap;
+    transition: background .15s, transform .12s;
+  }
+  .ov-a-btn:hover { background: rgba(255,255,255,0.97); transform: scale(1.05); }
+  .ov-a-icon { font-size: 14px; }
+
+  /* ══════════════════════════════════════
+     B — Gradient dolny + tekst w środku
+     nie zakrywa zdjęcia, pojawia się on-hover
+  ══════════════════════════════════════ */
+  .ov-b {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, transparent 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 20px;
+    padding-bottom: 12px;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .tile:hover .ov-b { opacity: 1; }
+  .ov-b-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    padding: 4px 0;
+    transition: opacity .15s;
+  }
+  .ov-b-btn:hover { opacity: .8; }
+  .ov-b-sep { color: rgba(255,255,255,0.35); font-size: 14px; margin-bottom: 1px; }
+
+  /* ══════════════════════════════════════
+     C — Dwa kółka ze szkła, bottom-right
+     eleganckie, minimalne
+  ══════════════════════════════════════ */
+  .ov-c {
+    position: absolute;
+    bottom: 10px; right: 10px;
+    display: flex;
+    gap: 7px;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .tile:hover .ov-c { opacity: 1; }
+  .ov-c-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 17px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: transform .12s, background .12s;
+  }
+  .ov-c-btn:hover { transform: scale(1.12); background: rgba(255,255,255,0.97); }
+
+  /* ══════════════════════════════════════
+     D — Elegancka wstążka po lewej stronie
+     pionowy pasek z ikonami, bez tekstu
+     subtelna, nie zasłania centrum zdjęcia
+  ══════════════════════════════════════ */
+  .ov-d {
+    position: absolute;
+    top: 50%; left: 0;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.18);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .tile:hover .ov-d { opacity: 1; }
+  .ov-d-btn {
+    width: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 6px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background .12s;
+  }
+  .ov-d-btn:hover { background: rgba(255,255,255,1); }
+  .ov-d-lbl {
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #444;
+    white-space: nowrap;
+  }
+
+</style>
+</head>
+<body>
+<h1>Nowe propozycje — wybierz styl</h1>
+<div class="grid">
+
+  <!-- A -->
+  <div class="card">
+    <div class="tile">
+      <img src="img/kubki/1b.jpg" onerror="this.style.background='#c8bfb0'">
+      <div class="ov-a">
+        <button class="ov-a-btn"><span class="ov-a-icon">📷</span> Galeria</button>
+        <button class="ov-a-btn"><span class="ov-a-icon">⚙️</span> Konfiguruj</button>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-label">A — Pigułki top-right, zawsze widoczne</div>
+      <div class="card-sub">Małe matowe kapsułki w rogu — zawsze na wierzchu, nie przysłaniają centrum zdjęcia. Klient od razu widzi opcje.</div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="card">
+    <div class="tile">
+      <img src="img/kubki/1b.jpg" onerror="this.style.background='#c8bfb0'">
+      <div class="ov-b">
+        <button class="ov-b-btn">📷 Galeria</button>
+        <span class="ov-b-sep">|</span>
+        <button class="ov-b-btn">⚙️ Konfiguruj</button>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-label">B — Gradient dolny + tekst (on hover)</div>
+      <div class="card-sub">Delikatny ciemny gradient przy dolnej krawędzi z etykietami. Pojawia się przy najechaniu. Bardzo subtelne.</div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="card">
+    <div class="tile">
+      <img src="img/kubki/1b.jpg" onerror="this.style.background='#c8bfb0'">
+      <div class="ov-c">
+        <button class="ov-c-btn" title="Galeria">📷</button>
+        <button class="ov-c-btn" title="Konfiguruj">⚙️</button>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-label">C — Kółka szklane bottom-right (on hover)</div>
+      <div class="card-sub">Dwa przezroczyste kółka w prawym dolnym rogu. Minimalistyczne, eleganckie. Ikona mówi sama za siebie.</div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="card">
+    <div class="tile">
+      <img src="img/kubki/1b.jpg" onerror="this.style.background='#c8bfb0'">
+      <div class="ov-d">
+        <button class="ov-d-btn">📷<span class="ov-d-lbl">Galeria</span></button>
+        <button class="ov-d-btn">⚙️<span class="ov-d-lbl">Ustaw</span></button>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-label">D — Wstążka lewa (on hover)</div>
+      <div class="card-sub">Pionowa wstążka po lewej, wyśrodkowana. Zajmuje minimalną powierzchnię, centrum zdjęcia wolne.</div>
+    </div>
+  </div>
+
+</div>
+<p style="margin-top:28px;font-size:11px;color:#aaa;">Najedź kursorem na kafelek żeby zobaczyć animację (B, C, D)</p>
+</body>
+</html>
