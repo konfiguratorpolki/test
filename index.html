@@ -8778,6 +8778,9 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             const tiles = galleryGridContainer.querySelectorAll('.gallery-tile');
             if (tiles.length < 2) { strip.style.display = 'none'; return; }
 
+            // reset paska do początku przy każdej inicjalizacji
+            strip.scrollLeft = 0;
+
             const step = _galTileStep();
 
             tiles.forEach((tile, idx) => {
@@ -8789,7 +8792,8 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                 const tImg = document.createElement('img');
                 tImg.src = imgEl.src;
                 tImg.alt = '';
-                tImg.loading = 'lazy';
+                // eager zamiast lazy — miniatury muszą być widoczne od razu
+                tImg.loading = 'eager';
                 btn.appendChild(tImg);
                 btn.addEventListener('click', () => {
                     galleryImageArea.scrollTo({ left: idx * step, behavior: 'smooth' });
@@ -8797,8 +8801,11 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                 track.appendChild(btn);
             });
 
+            // upewnij się że scroll paska jest na początku po wyrenderowaniu
+            requestAnimationFrame(() => { strip.scrollLeft = 0; });
+
             // Synchronizuj aktywną miniaturkę ze scrollem galerii — RAF throttle, bez jitter
-            let _lastThumbIdx = 0;
+            let _lastThumbIdx = 0;  // reset przy każdej zakładce
             let _thumbRafPending = false;
 
             const updateActive = () => {
