@@ -1701,10 +1701,10 @@ body.no-scroll {
     /* ── Kropki nawigacji — ukryte ── */
     .gallery-dots { display: none; }
 
-    /* ── Miniatury pod głównym zdjęciem — ukryte na desktop ── */
+    /* ── Miniatury pod kafelkiem — domyślnie ukryte (desktop bez zmian) ── */
     .gallery-mini-thumbs { display: none; }
 
-    /* ── MOBILE / TABLET: miniatury zamiast napisu ── */
+    /* ── TYLKO telefon / tablet ── */
     @media (max-width: 1023px) {
         .gallery-mini-thumbs {
             display: flex !important;
@@ -1721,17 +1721,17 @@ body.no-scroll {
         .gallery-mini-thumbs::-webkit-scrollbar { display: none; }
         .gallery-mini-thumb {
             flex-shrink: 0;
-            width: 44px;
-            height: 44px;
-            border-radius: 7px;
-            border: 2px solid transparent;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 2.5px solid transparent;
             overflow: hidden;
             padding: 0;
             cursor: pointer;
             background: #e5e7eb;
             transition: border-color 0.18s, transform 0.18s;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
         }
         .gallery-mini-thumb img {
             width: 100%;
@@ -1739,12 +1739,13 @@ body.no-scroll {
             object-fit: cover;
             display: block;
             pointer-events: none;
-            border-radius: 5px;
+            border-radius: 6px;
         }
         .gallery-mini-thumb.gmt-active {
             border-color: #16a34a;
-            transform: scale(1.08);
+            transform: scale(1.1);
         }
+        /* Ukryj napis — zastąpiony miniaturami */
         .gallery-caption {
             display: none !important;
         }
@@ -8564,7 +8565,7 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                 });
                 tileDiv.appendChild(dotsRow);
 
-                // ── miniatury (mobile/tablet) — zamiast napisu ──
+                // ── miniatury pod kafelkiem (mobile/tablet) ──
                 const thumbsRow = document.createElement('div');
                 thumbsRow.className = 'gallery-mini-thumbs';
                 allPhotos.forEach((src, ti) => {
@@ -8584,7 +8585,7 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             // zachowaj referencję do allPhotos dla lightboxa
             img._allPhotos = allPhotos;
 
-            // ── podpis (desktop only — na mobile zastąpiony miniaturami) ──
+            // ── podpis (desktop) / ukryty na mobile — zastąpiony miniaturami ──
             const captionDiv = document.createElement('div');
             captionDiv.className = 'gallery-caption';
             captionDiv.textContent = allPhotos.length > 1
