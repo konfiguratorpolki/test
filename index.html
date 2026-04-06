@@ -1506,15 +1506,29 @@ body.no-scroll {
     #viewOrderSection input[type="text"] { width: 100%; border-radius: 0.375rem; border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
     #viewOrderSection input[type="text"]:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 1px #10b981; }
     #viewOrderSection input[type="text"]:placeholder-shown { font-style: italic; }
-    #tabbedGalleryContainer { background-color: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); padding: 1rem 1rem 0.75rem; margin-bottom: 1.5rem; border: 1px solid #e5e7eb; }
+    /* ── iPhone-style unified gallery card ── */
+    #tabbedGalleryContainer {
+        background: #fff;
+        border-radius: 22px;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+        margin: 0 16px 1.5rem;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.06);
+        padding: 0;
+    }
+    @media (min-width: 768px) {
+        #tabbedGalleryContainer { margin-left: 24px; margin-right: 24px; }
+    }
+    @media (min-width: 1280px) {
+        #tabbedGalleryContainer { margin-left: auto; margin-right: auto; }
+    }
 
     /* ── Pill-style horizontal scroll tabs ── */
     .gallery-tabs {
         display: flex; gap: 8px;
         overflow-x: auto; overflow-y: visible;
         scrollbar-width: none;
-        padding: 4px 2px 14px;
-        margin-bottom: 6px;
+        padding: 14px 16px 10px;
         -webkit-overflow-scrolling: touch;
     }
     .gallery-tabs::-webkit-scrollbar { display: none; }
@@ -1563,9 +1577,8 @@ body.no-scroll {
         position: relative;
         width: 100%;
         overflow: hidden;
-        min-height: 200px;
     }
-    /* ── Native scroll-snap gallery ── */
+    /* ── iPhone-style scroll-snap gallery ── */
     .gallery-image-area {
         overflow-x: scroll;
         overflow-y: hidden;
@@ -1573,12 +1586,13 @@ body.no-scroll {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        padding: 12px 0;
+        padding: 12px 0 14px;
         position: relative;
-        margin: 0;
-        cursor: grab;
+        user-select: none;
+        /* momentum iOS style */
+        will-change: scroll-position;
     }
-    .gallery-image-area:active { cursor: grabbing; }
+    .gallery-image-area.is-dragging { scroll-snap-type: none; cursor: grabbing; }
     .gallery-image-area::-webkit-scrollbar { display: none; }
     /* reset Swiper transforms */
     .gallery-image-area .swiper-wrapper {
@@ -1589,7 +1603,7 @@ body.no-scroll {
     .gallery-grid {
         display: flex;
         gap: 20px;
-        padding: 0 48px;
+        padding: 0 20px;
         width: max-content;
     }
     /* Mobile: centrowanie kafelków jak iPhone Photos */
@@ -1644,18 +1658,13 @@ body.no-scroll {
     .config-btn { display: none !important; }
 
     .info-ticker-wrap {
-        position: absolute;
-        bottom: 12px;
-        left: 0;
         width: 100%;
-        background-color: #ffffff;
+        background: #f9fafb;
+        border-top: 1px solid rgba(0,0,0,0.06);
         overflow: hidden;
-        padding: 5px 0;
-        box-sizing: border-box;
+        padding: 7px 0;
         display: flex;
         align-items: center;
-        z-index: 5;
-        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.04);
     }
     .info-ticker-content {
         display: inline-block;
@@ -1794,12 +1803,32 @@ body.no-scroll {
         100%{ opacity: 1; transform: scale(1); }
     }
     
-    .gallery-arrow { position: absolute; top: 45%; transform: translateY(-50%); width: 40px; height: 40px; font-size: 20px; background: #fff; border: 1px solid #e0e0e0; border-radius: 50%; box-shadow: 0 2px 6px rgb(0 0 0 / .12); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s, box-shadow .2s, opacity .3s, transform 0.2s ease-out; z-index: 10; color: #374151; }
-    .gallery-content-wrapper:hover .gallery-arrow { opacity: 1; pointer-events: auto; }
-    .gallery-arrow:hover { background: #f0f0f0; box-shadow: 0 3px 9px rgb(0 0 0 /.18); transform: translateY(-50%) scale(1.05); color: #16A34A; }
-    .gallery-arrow:active { transform: translateY(-50%) scale(0.95); background: #e7e7e7;}
-    .gallery-prev-arrow { left: 12px; } .gallery-next-arrow { right: 12px; }
-    .gallery-arrow.swiper-button-disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
+    /* ── iOS-style gallery arrows ── */
+    .gallery-arrow {
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+        width: 36px; height: 36px;
+        background: rgba(255,255,255,0.82);
+        backdrop-filter: blur(10px) saturate(1.6);
+        -webkit-backdrop-filter: blur(10px) saturate(1.6);
+        border: 1px solid rgba(255,255,255,0.5);
+        border-radius: 50%;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.06);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; z-index: 10;
+        color: #1c1c1e;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.18s cubic-bezier(.4,0,.2,1), background 0.15s;
+    }
+    /* Pokazuj strzałki gdy kursor nad galerią lub touch */
+    .gallery-content-wrapper:hover .gallery-arrow,
+    .gallery-content-wrapper.arrows-visible .gallery-arrow { opacity: 1; pointer-events: auto; }
+    .gallery-arrow:hover { background: rgba(255,255,255,0.96); transform: translateY(-50%) scale(1.08); }
+    .gallery-arrow:active { transform: translateY(-50%) scale(0.93); }
+    .gallery-prev-arrow { left: 10px; }
+    .gallery-next-arrow { right: 10px; }
+    .gallery-arrow.swiper-button-disabled { opacity: 0 !important; pointer-events: none; }
 
 
     #stickyFooterBar { transform: translateY(0); transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; padding: 0.5rem 0.25rem; height: 60px; z-index: 990; }
@@ -2952,16 +2981,31 @@ body.no-scroll {
             </button>
         </div>
     </div>
-<div id="tabbedGalleryContainer" class="w-full max-w-7xl mx-auto px-4 md:px-6"> <div class="gallery-tabs" id="galleryTabsContainer"></div> <div class="gallery-content-wrapper"> <button class="gallery-arrow gallery-prev-arrow" aria-label="Poprzednie zdjęcia">&#10094;</button> <div class="gallery-image-area" id="galleryImageArea"> <div class="gallery-grid" id="galleryGridContainer"></div> </div>
-<div class="info-ticker-wrap">
+<div id="tabbedGalleryContainer" class="w-full max-w-7xl mx-auto">
+  <div class="gallery-tabs" id="galleryTabsContainer"></div>
+  <div class="gallery-content-wrapper">
+    <!-- iOS chevron — lewy -->
+    <button class="gallery-arrow gallery-prev-arrow" aria-label="Poprzednie zdjęcia">
+      <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,1 1,9 9,17"/></svg>
+    </button>
+    <div class="gallery-image-area" id="galleryImageArea">
+      <div class="gallery-grid" id="galleryGridContainer"></div>
+    </div>
+    <!-- iOS chevron — prawy -->
+    <button class="gallery-arrow gallery-next-arrow" aria-label="Następne zdjęcia">
+      <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 9,9 1,17"/></svg>
+    </button>
+  </div>
+  <!-- Ticker poniżej zdjęć — nie nakłada się -->
+  <div class="info-ticker-wrap">
     <div class="info-ticker-content">
         <span>✨ Półeczki wykonane z wysokiej jakości płyty laminowanej • odpornej na wilgoć i zabrudzenia</span>
         <span>✨ Precyzyjne cięcie i klejenie na profesjonalnych maszynach • Brak odprysków i niedoskonałości</span>
         <span>✨ Okleina ABS doskonale przylega do krawędzi • Grubość płyty: 1,8 cm</span>
         <span>✨ Wysyłane gotowe, złożone</span>
     </div>
+  </div>
 </div>
-<button class="gallery-arrow gallery-next-arrow" aria-label="Następne zdjęcia">&#10095;</button> </div> </div>
 <div class="w-full max-w-7xl mx-auto px-4 md:px-6 mb-6">
     <div class="bg-emerald-50 border-2 border-dashed border-emerald-300 rounded-xl p-4 md:p-5 flex items-center space-x-4 shadow-sm">
     <div class="flex-shrink-0">
@@ -8555,7 +8599,8 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
         galleryGridContainer.appendChild(fragment);
         gallerySwiperInstance = null; // native scroll-snap — Swiper nie potrzebny
 
-        // ── native scroll: strzałki + stan disabled ──
+        // ── Strzałki i scroll ──
+        const _galWrapper = galleryImageArea.closest('.gallery-content-wrapper');
         const _galTileStep = () => {
             const tile = galleryGridContainer.querySelector('.gallery-tile');
             if (!tile) return 300;
@@ -8570,17 +8615,84 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             galleryNextArrow.classList.toggle('swiper-button-disabled', sl > max - 4);
         };
 
-        // usuń stare listenery (jeśli były) i dodaj nowe
+        // ── Auto-show/hide arrows on touch (iOS-like) ──
+        let _arrowHideTimer = null;
+        const _showArrows = () => {
+            if (!_galWrapper) return;
+            _galWrapper.classList.add('arrows-visible');
+            clearTimeout(_arrowHideTimer);
+            _arrowHideTimer = setTimeout(() => _galWrapper.classList.remove('arrows-visible'), 2000);
+        };
+
         if (!galleryImageArea._snapInit) {
             galleryImageArea._snapInit = true;
-            galleryImageArea.addEventListener('scroll', _galUpdateArrows, { passive: true });
+
+            // scroll → update arrows + show them
+            galleryImageArea.addEventListener('scroll', () => { _galUpdateArrows(); _showArrows(); }, { passive: true });
+
+            // Strzałki klikalne
             galleryPrevArrow.addEventListener('click', () => {
                 galleryImageArea.scrollBy({ left: -_galTileStep(), behavior: 'smooth' });
             });
             galleryNextArrow.addEventListener('click', () => {
                 galleryImageArea.scrollBy({ left: _galTileStep(), behavior: 'smooth' });
             });
+
+            // ── iPhone-style momentum drag (desktop) ──
+            let _drag = { active: false, startX: 0, scrollStart: 0, velX: 0, lastX: 0, lastT: 0, rafId: null };
+
+            const _stopMomentum = () => { if (_drag.rafId) { cancelAnimationFrame(_drag.rafId); _drag.rafId = null; } };
+
+            const _applyMomentum = () => {
+                _drag.velX *= 0.92;                          // deceleration (iPhone feel)
+                if (Math.abs(_drag.velX) < 0.5) {
+                    _stopMomentum();
+                    // snap to nearest tile after momentum
+                    const step = _galTileStep();
+                    const nearest = Math.round(galleryImageArea.scrollLeft / step) * step;
+                    galleryImageArea.scrollTo({ left: nearest, behavior: 'smooth' });
+                    return;
+                }
+                galleryImageArea.scrollLeft -= _drag.velX;
+                _drag.rafId = requestAnimationFrame(_applyMomentum);
+            };
+
+            galleryImageArea.addEventListener('pointerdown', e => {
+                if (e.pointerType === 'touch') return;       // mobile handles own scroll
+                _stopMomentum();
+                _drag.active = true;
+                _drag.startX = e.clientX;
+                _drag.scrollStart = galleryImageArea.scrollLeft;
+                _drag.lastX = e.clientX;
+                _drag.lastT = Date.now();
+                _drag.velX = 0;
+                galleryImageArea.setPointerCapture(e.pointerId);
+                galleryImageArea.classList.add('is-dragging');
+            });
+
+            galleryImageArea.addEventListener('pointermove', e => {
+                if (!_drag.active || e.pointerType === 'touch') return;
+                const now = Date.now();
+                const dt = Math.max(now - _drag.lastT, 1);
+                _drag.velX = (e.clientX - _drag.lastX) / dt * 16; // px per frame @60fps
+                _drag.lastX = e.clientX; _drag.lastT = now;
+                galleryImageArea.scrollLeft = _drag.scrollStart - (e.clientX - _drag.startX);
+                _showArrows();
+            });
+
+            const _endDrag = e => {
+                if (!_drag.active || e.pointerType === 'touch') return;
+                _drag.active = false;
+                galleryImageArea.classList.remove('is-dragging');
+                _drag.rafId = requestAnimationFrame(_applyMomentum);
+            };
+            galleryImageArea.addEventListener('pointerup',     _endDrag);
+            galleryImageArea.addEventListener('pointercancel', _endDrag);
+
+            // Tap shows arrows on mobile
+            galleryImageArea.addEventListener('touchstart', _showArrows, { passive: true });
         }
+
         // reset scroll do początku przy zmianie zakładki
         galleryImageArea.scrollLeft = 0;
         _galUpdateArrows();
