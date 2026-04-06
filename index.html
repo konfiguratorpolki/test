@@ -1509,11 +1509,11 @@ body.no-scroll {
     /* ── iPhone-style unified gallery card ── */
     #tabbedGalleryContainer {
         background: #fff;
-        border-radius: 22px;
-        box-shadow: 0 2px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
-        margin: 0 16px 1.5rem;
+        border-radius: 20px;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.07);
+        margin: 0 12px 1.25rem;
         overflow: hidden;
-        border: 1px solid rgba(0,0,0,0.06);
+        border: 0.5px solid rgba(0,0,0,0.08);
         padding: 0;
     }
     @media (min-width: 768px) {
@@ -1525,44 +1525,45 @@ body.no-scroll {
 
     /* ── Pill-style horizontal scroll tabs ── */
     .gallery-tabs {
-        display: flex; gap: 8px;
+        display: flex; gap: 6px;
         overflow-x: auto; overflow-y: visible;
         scrollbar-width: none;
-        padding: 14px 16px 10px;
+        padding: 12px 12px 8px;
         -webkit-overflow-scrolling: touch;
     }
     .gallery-tabs::-webkit-scrollbar { display: none; }
 
     .gallery-tab {
-        display: inline-flex; align-items: center; gap: 8px;
+        display: inline-flex; align-items: center; gap: 6px;
         flex-shrink: 0;
-        padding: 8px 16px 8px 9px;
-        background: #f3f4f6;
-        border: 2px solid transparent;
+        padding: 6px 13px 6px 7px;
+        background: #f2f2f7;
+        border: 1.5px solid transparent;
         border-radius: 100px;
         cursor: pointer;
-        font-size: 13px; font-weight: 700;
-        color: #374151;
+        font-size: 12.5px; font-weight: 600;
+        color: #3a3a3c;
         white-space: nowrap;
-        transition: all 0.2s cubic-bezier(.4,0,.2,1);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        transition: all 0.22s cubic-bezier(.4,0,.2,1);
+        box-shadow: none;
         -webkit-tap-highlight-color: transparent;
         user-select: none;
+        letter-spacing: -0.01em;
     }
-    .gallery-tab:active { transform: scale(0.95); }
-    .gallery-tab:hover { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+    .gallery-tab:active { transform: scale(0.94); }
+    .gallery-tab:hover { background: #e8f5e8; border-color: #86efac; color: #15803d; }
     .gallery-tab.active {
         background: #f0fdf4;
         border-color: #16a34a;
         color: #15803d;
-        box-shadow: 0 3px 12px rgba(22,163,74,0.20);
+        box-shadow: 0 2px 8px rgba(22,163,74,0.15);
     }
 
     /* Kółko z ikonką wewnątrz pill */
     .gallery-tab .tab-icon {
-        width: 26px; height: 26px;
-        border-radius: 8px;
-        background: #e5e7eb;
+        width: 22px; height: 22px;
+        border-radius: 7px;
+        background: rgba(0,0,0,0.06);
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
         transition: background 0.2s;
@@ -1586,7 +1587,7 @@ body.no-scroll {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        padding: 12px 0 14px;
+        padding: 10px 0 4px;
         position: relative;
         user-select: none;
         /* momentum iOS style */
@@ -1639,8 +1640,8 @@ body.no-scroll {
          transform: scale(1.02);
     }
     .gallery-image-container {
-        position: relative; width: 100%; height: 230px; border-radius: 6px; overflow: hidden;
-        background: #fff; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+        position: relative; width: 100%; height: 230px; border-radius: 12px; overflow: hidden;
+        background: #f8f8f8; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.06);
         transition: transform 0.3s, box-shadow 0.3s;
         cursor: grab;
     }
@@ -1650,10 +1651,10 @@ body.no-scroll {
         width: 100%; 
         height: 100%; 
         object-fit: contain;
-        background: #fff; 
-        transition: transform 0.35s; 
+        background: #f8f8f8; 
+        transition: opacity 0.2s ease;
     }
-    .gallery-tile:hover .gallery-image-container img { transform: scale(1.05); }
+    .gallery-tile:hover .gallery-image-container img { transform: none; }
 
     .config-btn { display: none !important; }
 
@@ -1689,51 +1690,56 @@ body.no-scroll {
     }
 
     .gallery-caption {
-        margin-top: 8px; font-size: .8em; font-weight: 500; color: #57534E;
+        margin-top: 5px; font-size: .75em; font-weight: 500; color: #8e8e93;
         text-align: center; width: 100%;
-        opacity: 0.7; transition: opacity 0.3s ease;
+        opacity: 1; transition: opacity 0.3s ease;
+        letter-spacing: 0.01em;
     }
     .gallery-tile:hover .gallery-caption { opacity: 1; }
 
-    /* ── Odznaka liczby zdjęć ── */
-    .gallery-photo-badge { display: none; }
-
-    /* ── Kropki nawigacji — ukryte ── */
-    .gallery-dots { display: none; }
-
-    /* ── Miniatury pod kafelkiem — domyślnie ukryte (desktop bez zmian) ── */
-    .gallery-mini-thumbs { display: none; }
-
-    /* ── TYLKO telefon / tablet ── */
+    /* ── Pasek miniaturek pod galerią — tylko mobile/tablet ── */
+    .gallery-thumb-strip {
+        display: none;
+    }
     @media (max-width: 1023px) {
-        .gallery-mini-thumbs {
-            display: flex !important;
+        .gallery-thumb-strip {
+            display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 6px;
-            margin-top: 8px;
             width: 100%;
+            padding: 4px 10px 10px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 2px 4px 4px;
             scrollbar-width: none;
+            box-sizing: border-box;
         }
-        .gallery-mini-thumbs::-webkit-scrollbar { display: none; }
-        .gallery-mini-thumb {
+        .gallery-thumb-strip::-webkit-scrollbar { display: none; }
+        .gallery-thumb-track {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+        }
+        .gts-thumb {
             flex-shrink: 0;
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
-            border: 2.5px solid transparent;
+            border: 2px solid transparent;
             overflow: hidden;
             padding: 0;
             cursor: pointer;
             background: #e5e7eb;
-            transition: border-color 0.18s, transform 0.18s;
+            transition:
+                border-color 0.2s cubic-bezier(.4,0,.2,1),
+                transform 0.25s cubic-bezier(.34,1.56,.64,1),
+                box-shadow 0.2s ease,
+                opacity 0.2s ease;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+            opacity: 0.72;
+            outline: none;
         }
-        .gallery-mini-thumb img {
+        .gts-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -1741,15 +1747,23 @@ body.no-scroll {
             pointer-events: none;
             border-radius: 6px;
         }
-        .gallery-mini-thumb.gmt-active {
-            border-color: #16a34a;
-            transform: scale(1.1);
+        .gts-thumb:active {
+            transform: scale(0.9) !important;
+            transition-duration: 0.08s !important;
         }
-        /* Ukryj napis — zastąpiony miniaturami */
-        .gallery-caption {
-            display: none !important;
+        .gts-thumb.gts-active {
+            border-color: #16a34a;
+            transform: scale(1.13);
+            opacity: 1;
+            box-shadow: 0 0 0 3px rgba(22,163,74,0.18), 0 2px 8px rgba(22,163,74,0.22);
         }
     }
+
+    /* ── Odznaka liczby zdjęć ── */
+    .gallery-photo-badge { display: none; }
+
+    /* ── Kropki nawigacji — ukryte ── */
+    .gallery-dots { display: none; }
 
     /* ── Lightbox slider ── */
     #lb-viewport {
@@ -1846,10 +1860,10 @@ body.no-scroll {
 
     /* ── Animacja przejścia zdjęcia ── */
     .gallery-image-container img.photo-fade {
-        animation: photoSwap .22s ease;
+        animation: photoSwap .18s ease;
     }
     @keyframes photoSwap {
-        0%  { opacity: 0; transform: scale(1.04); }
+        0%  { opacity: 0; transform: scale(1.03); }
         100%{ opacity: 1; transform: scale(1); }
     }
     
@@ -1857,25 +1871,25 @@ body.no-scroll {
     .gallery-arrow {
         position: absolute;
         top: 50%; transform: translateY(-50%);
-        width: 36px; height: 36px;
-        background: rgba(255,255,255,0.82);
-        backdrop-filter: blur(10px) saturate(1.6);
-        -webkit-backdrop-filter: blur(10px) saturate(1.6);
-        border: 1px solid rgba(255,255,255,0.5);
+        width: 34px; height: 34px;
+        background: rgba(255,255,255,0.88);
+        backdrop-filter: blur(12px) saturate(1.8);
+        -webkit-backdrop-filter: blur(12px) saturate(1.8);
+        border: 0.5px solid rgba(0,0,0,0.10);
         border-radius: 50%;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.06);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.13);
         display: flex; align-items: center; justify-content: center;
         cursor: pointer; z-index: 10;
         color: #1c1c1e;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.25s ease, transform 0.18s cubic-bezier(.4,0,.2,1), background 0.15s;
+        transition: opacity 0.2s ease, transform 0.16s cubic-bezier(.4,0,.2,1), background 0.15s;
     }
     /* Pokazuj strzałki gdy kursor nad galerią lub touch */
     .gallery-content-wrapper:hover .gallery-arrow,
     .gallery-content-wrapper.arrows-visible .gallery-arrow { opacity: 1; pointer-events: auto; }
-    .gallery-arrow:hover { background: rgba(255,255,255,0.96); transform: translateY(-50%) scale(1.08); }
-    .gallery-arrow:active { transform: translateY(-50%) scale(0.93); }
+    .gallery-arrow:hover { background: rgba(255,255,255,0.97); transform: translateY(-50%) scale(1.1); }
+    .gallery-arrow:active { transform: translateY(-50%) scale(0.9); }
     .gallery-prev-arrow { left: 10px; }
     .gallery-next-arrow { right: 10px; }
     .gallery-arrow.swiper-button-disabled { opacity: 0 !important; pointer-events: none; }
@@ -3045,6 +3059,10 @@ body.no-scroll {
     <button class="gallery-arrow gallery-next-arrow" aria-label="Następne zdjęcia">
       <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,1 9,9 1,17"/></svg>
     </button>
+  </div>
+  <!-- Pasek miniaturek — tylko mobile/tablet -->
+  <div id="galleryThumbStrip" class="gallery-thumb-strip">
+    <div id="galleryThumbTrack" class="gallery-thumb-track"></div>
   </div>
   <!-- Ticker poniżej zdjęć — nie nakłada się -->
   <div class="info-ticker-wrap">
@@ -8564,28 +8582,11 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                     dotsRow.appendChild(dot);
                 });
                 tileDiv.appendChild(dotsRow);
-
-                // ── miniatury pod kafelkiem (mobile/tablet) ──
-                const thumbsRow = document.createElement('div');
-                thumbsRow.className = 'gallery-mini-thumbs';
-                allPhotos.forEach((src, ti) => {
-                    const thumb = document.createElement('button');
-                    thumb.className = 'gallery-mini-thumb' + (ti === 0 ? ' gmt-active' : '');
-                    thumb.setAttribute('aria-label', `Zdjęcie ${ti + 1}`);
-                    const tImg = document.createElement('img');
-                    tImg.src = src;
-                    tImg.alt = '';
-                    tImg.loading = 'lazy';
-                    thumb.appendChild(tImg);
-                    thumb.addEventListener('click', e => { e.stopPropagation(); img._setPhoto(ti); });
-                    thumbsRow.appendChild(thumb);
-                });
-                tileDiv.appendChild(thumbsRow);
             }
             // zachowaj referencję do allPhotos dla lightboxa
             img._allPhotos = allPhotos;
 
-            // ── podpis (desktop) / ukryty na mobile — zastąpiony miniaturami ──
+            // ── podpis ──
             const captionDiv = document.createElement('div');
             captionDiv.className = 'gallery-caption';
             captionDiv.textContent = allPhotos.length > 1
@@ -8763,6 +8764,54 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
         // reset scroll do początku przy zmianie zakładki
         galleryImageArea.scrollLeft = 0;
         _galUpdateArrows();
+
+        // ── Pasek miniaturek (mobile/tablet) ──
+        (function buildThumbStrip() {
+            if (window.innerWidth > 1023) return; // tylko mobile/tablet
+            const strip = document.getElementById('galleryThumbStrip');
+            const track = document.getElementById('galleryThumbTrack');
+            if (!strip || !track) return;
+            track.innerHTML = '';
+
+            const tiles = galleryGridContainer.querySelectorAll('.gallery-tile');
+            if (tiles.length < 2) { strip.style.display = 'none'; return; }
+
+            const step = _galTileStep();
+
+            tiles.forEach((tile, idx) => {
+                const imgEl = tile.querySelector('img');
+                if (!imgEl) return;
+                const btn = document.createElement('button');
+                btn.className = 'gts-thumb' + (idx === 0 ? ' gts-active' : '');
+                btn.setAttribute('aria-label', 'Przejdź do zdjęcia ' + (idx + 1));
+                const tImg = document.createElement('img');
+                tImg.src = imgEl.src;
+                tImg.alt = '';
+                tImg.loading = 'lazy';
+                btn.appendChild(tImg);
+                btn.addEventListener('click', () => {
+                    galleryImageArea.scrollTo({ left: idx * step, behavior: 'smooth' });
+                });
+                track.appendChild(btn);
+            });
+
+            // Synchronizuj aktywną miniaturkę ze scrollem galerii
+            const updateActive = () => {
+                const step2 = _galTileStep();
+                const idx = Math.round(galleryImageArea.scrollLeft / step2);
+                track.querySelectorAll('.gts-thumb').forEach((b, bi) => {
+                    b.classList.toggle('gts-active', bi === idx);
+                });
+                // przewiń pasek miniaturek żeby aktywna była widoczna
+                const activeBtn = track.children[idx];
+                if (activeBtn) activeBtn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+            };
+
+            if (!galleryImageArea._thumbStripListener) {
+                galleryImageArea._thumbStripListener = true;
+                galleryImageArea.addEventListener('scroll', updateActive, { passive: true });
+            }
+        })();
     };
 
     // SVG ikony dla każdej kategorii półek (liniowe, 16×16 viewport)
