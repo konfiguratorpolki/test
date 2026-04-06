@@ -8497,6 +8497,7 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                 const introTileDiv = document.createElement('div');
                 introTileDiv.id = 'galleryIntroTile';
                 introTileDiv.className = 'gallery-intro-tile';
+                introTileDiv.style.pointerEvents = 'none';
                 introTileDiv.innerHTML = `<p><strong>Kliknij w zdjęcie</strong>, by przerobić gotową półkę, lub <strong>zaprojektuj własną</strong> od nowa.</p>`;
                 imgContainer.appendChild(introTileDiv);
                 setTimeout(() => { introTileDiv.classList.add('is-animating'); }, 100);
@@ -8667,6 +8668,8 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
         });
 
         galleryGridContainer.appendChild(fragment);
+        // reset natychmiastowy — przed scroll-snap i layout przeglądarki
+        galleryImageArea.scrollLeft = 0;
         gallerySwiperInstance = null; // native scroll-snap — Swiper nie potrzebny
 
         // ── Strzałki i scroll ──
@@ -8763,9 +8766,12 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             galleryImageArea.addEventListener('touchstart', _showArrows, { passive: true });
         }
 
-        // reset scroll do początku przy zmianie zakładki
+        // reset scroll — podwójny żeby iOS Safari nie przywracał starej pozycji
         galleryImageArea.scrollLeft = 0;
-        _galUpdateArrows();
+        requestAnimationFrame(() => {
+            galleryImageArea.scrollLeft = 0;
+            _galUpdateArrows();
+        });
 
         // ── Pasek miniaturek (mobile/tablet) ──
         (function buildThumbStrip() {
