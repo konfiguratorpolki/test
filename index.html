@@ -9,7 +9,7 @@
         gtag('js', new Date());
         gtag('config', 'G-DNBGJLP2FN');
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>Konfigurator Półki</title>
     <script src="wzory.js"></script>
@@ -21,6 +21,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <style>
+
+    html, body {
+        touch-action: manipulation;
+    }
 
     /* --- Style dla animacji generowania kodów --- */
     #codesSection.visible {
