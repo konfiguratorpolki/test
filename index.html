@@ -1874,16 +1874,19 @@ body.no-scroll {
     }
     .lb-strip:empty { display: none; }
     .lb-thumb {
-        width: 64px; height: 52px; border-radius: 6px;
+        width: 64px; height: 52px; border-radius: 8px;
         object-fit: cover; cursor: pointer;
-        border: 2.5px solid rgba(255,255,255,0.25);
-        opacity: 0.55; transition: all 0.2s; flex-shrink: 0;
+        border: 2px solid transparent;
+        opacity: 0.5;
+        transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+        flex-shrink: 0;
     }
     .lb-thumb.active {
-        border-color: #16a34a; opacity: 1;
-        box-shadow: 0 0 0 2px #16a34a66;
+        opacity: 1;
+        transform: scale(1.12);
+        box-shadow: 0 3px 12px rgba(0,0,0,0.4);
     }
-    .lb-thumb:hover { opacity: 0.9; transform: scale(1.06); }
+    .lb-thumb:hover { opacity: 0.85; transform: scale(1.06); }
 
     /* ── Animacja przejścia zdjęcia ── */
     .gallery-image-container img.photo-fade {
@@ -1892,6 +1895,22 @@ body.no-scroll {
     @keyframes photoSwap {
         0%  { opacity: 0; transform: scale(1.03); }
         100%{ opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Animacja otwarcia lightboxa — iPhone-feel ── */
+    @keyframes lb-open-content {
+        from { opacity: 0; transform: scale(0.88) translateY(18px); }
+        to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+    @keyframes lb-open-bg {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    #imageLightbox.lb-opening {
+        animation: lb-open-bg 0.22s ease both;
+    }
+    #imageLightbox.lb-opening > .flex {
+        animation: lb-open-content 0.35s cubic-bezier(0.34, 1.38, 0.64, 1) both;
     }
     
     /* ── iOS-style gallery arrows ── */
@@ -8258,9 +8277,28 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             _lb.prevBtn  = document.getElementById('lb-prev');
             _lb.nextBtn  = document.getElementById('lb-next');
 
-            // pokaż lightbox
+            // Efekt "odsunięcia sąsiadów" — aktywny kafel powiększa się, reszta cofa
+            const _srcTile = typeof imageSrc === 'string'
+                ? Array.from(document.querySelectorAll('.gallery-image-container img')).find(im => im.src.includes(imageSrc.split('/').pop()))?.closest('.gallery-tile')
+                : null;
+            document.querySelectorAll('.gallery-tile').forEach(t => {
+                t.style.transition = 'transform 0.32s cubic-bezier(0.34,1.38,0.64,1), opacity 0.32s ease';
+                if (t === _srcTile) {
+                    t.style.transform = 'scale(1.04)';
+                } else {
+                    t.style.transform = 'scale(0.95)';
+                    t.style.opacity = '0.7';
+                }
+            });
+
+            // pokaż lightbox z animacją
             imageLightbox.classList.remove('hidden');
             imageLightbox.classList.remove('opacity-0');
+            imageLightbox.classList.remove('lb-opening');
+            void imageLightbox.offsetWidth; // reflow
+            imageLightbox.classList.add('lb-opening');
+            setTimeout(() => imageLightbox.classList.remove('lb-opening'), 400);
+
             // Blokuj scroll tła (iOS-safe: position fixed + zapamiętaj pozycję)
             const _savedScrollY = window.scrollY || window.pageYOffset;
             document.body.dataset.lbScrollY = _savedScrollY;
@@ -8348,6 +8386,13 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             if (imageLightbox) {
                 imageLightbox.classList.add('hidden');
                 imageLightbox.classList.add('opacity-0');
+                imageLightbox.classList.remove('lb-opening');
+                // Przywróć kafle galerii
+                document.querySelectorAll('.gallery-tile').forEach(t => {
+                    t.style.transform = '';
+                    t.style.opacity = '';
+                    setTimeout(() => { t.style.transition = ''; }, 320);
+                });
                 // Przywróć scroll tła i pozycję strony
                 const _restoreY = parseInt(document.body.dataset.lbScrollY || '0');
                 document.body.style.overflow = '';
@@ -8562,8 +8607,9 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
             const imgContainer = document.createElement('div');
             imgContainer.className = 'gallery-image-container';
 
-            // intro tile
-            if (galleryIndex === 0 && i === 0) {
+            // intro tile — pokazuj tylko RAZ (sessionStorage)
+            if (galleryIndex === 0 && i === 0 && !sessionStorage.getItem('gal-intro-shown')) {
+                sessionStorage.setItem('gal-intro-shown', '1');
                 const introTileDiv = document.createElement('div');
                 introTileDiv.id = 'galleryIntroTile';
                 introTileDiv.className = 'gallery-intro-tile';
@@ -8604,13 +8650,15 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                     tileDiv.querySelectorAll('.gallery-mini-thumb').forEach((t, ti) => t.classList.toggle('gmt-active', ti === idx));
                 };
 
-                // ── swipe na mobile ──
-                let _tx = 0, _ty = 0;
-                imgContainer.addEventListener('touchstart', e => { _tx = e.touches[0].clientX; _ty = e.touches[0].clientY; }, { passive: true });
+                // ── swipe na mobile — wyższy próg żeby nie mylić z tapem ──
+                let _tx = 0, _ty = 0, _tt = 0;
+                imgContainer.addEventListener('touchstart', e => { _tx = e.touches[0].clientX; _ty = e.touches[0].clientY; _tt = Date.now(); }, { passive: true });
                 imgContainer.addEventListener('touchend', e => {
                     const dx = e.changedTouches[0].clientX - _tx;
                     const dy = e.changedTouches[0].clientY - _ty;
-                    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 38) {
+                    const dt = Date.now() - _tt;
+                    // Swipe: minimum 60px poziomo, bardziej poziomy niż pionowy, i nie za wolny
+                    if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 60 && dt < 500) {
                         const next = Math.max(0, Math.min(allPhotos.length - 1, currentPhotoIdx + (dx < 0 ? 1 : -1)));
                         if (next !== currentPhotoIdx) setPhoto(next);
                     }
