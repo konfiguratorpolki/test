@@ -1721,22 +1721,23 @@ body.no-scroll {
         }
         .gts-thumb {
             flex-shrink: 0;
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 9px;
             border: none;
             overflow: hidden;
             padding: 0;
             cursor: pointer;
             background: #e5e7eb;
+            /* TYLKO transform — GPU, zero reflow, zero trzęsienia strony */
+            will-change: transform;
             transition:
-                width  0.28s cubic-bezier(.34,1.38,.64,1),
-                height 0.28s cubic-bezier(.34,1.38,.64,1),
+                transform  0.3s cubic-bezier(.34,1.38,.64,1),
                 box-shadow 0.22s ease,
-                opacity 0.2s ease;
+                opacity    0.2s ease;
             -webkit-tap-highlight-color: transparent;
             box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-            opacity: 0.6;
+            opacity: 0.62;
             outline: none;
         }
         .gts-thumb img {
@@ -1748,16 +1749,13 @@ body.no-scroll {
             border-radius: 7px;
         }
         .gts-thumb:active:not(.gts-active) {
-            width: 36px;
-            height: 36px;
-            transition: width 0.08s ease, height 0.08s ease !important;
+            transform: scale(0.86);
+            transition: transform 0.08s ease !important;
         }
         .gts-thumb.gts-active {
-            width: 54px;
-            height: 54px;
-            border-radius: 11px;
+            transform: scale(1.28);
             opacity: 1;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.22);
+            box-shadow: 0 3px 14px rgba(0,0,0,0.25);
         }
     }
 
@@ -1873,17 +1871,18 @@ body.no-scroll {
     .lb-thumb {
         width: 64px; height: 52px; border-radius: 8px;
         object-fit: cover; cursor: pointer;
-        border: 2px solid transparent;
+        border: none;
         opacity: 0.5;
-        transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+        will-change: transform;
+        transition: opacity 0.22s, transform 0.3s cubic-bezier(.34,1.38,.64,1), box-shadow 0.22s;
         flex-shrink: 0;
     }
     .lb-thumb.active {
         opacity: 1;
-        transform: scale(1.12);
-        box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+        transform: scale(1.14);
+        box-shadow: 0 3px 14px rgba(0,0,0,0.35);
     }
-    .lb-thumb:hover { opacity: 0.85; transform: scale(1.06); }
+    .lb-thumb:hover { opacity: 0.85; }
 
     /* ── Animacja przejścia zdjęcia ── */
     .gallery-image-container img.photo-fade {
