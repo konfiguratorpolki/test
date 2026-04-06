@@ -1701,6 +1701,55 @@ body.no-scroll {
     /* ── Kropki nawigacji — ukryte ── */
     .gallery-dots { display: none; }
 
+    /* ── Miniatury pod głównym zdjęciem — ukryte na desktop ── */
+    .gallery-mini-thumbs { display: none; }
+
+    /* ── MOBILE / TABLET: miniatury zamiast napisu ── */
+    @media (max-width: 1023px) {
+        .gallery-mini-thumbs {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 2px 4px 4px;
+            scrollbar-width: none;
+        }
+        .gallery-mini-thumbs::-webkit-scrollbar { display: none; }
+        .gallery-mini-thumb {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 7px;
+            border: 2px solid transparent;
+            overflow: hidden;
+            padding: 0;
+            cursor: pointer;
+            background: #e5e7eb;
+            transition: border-color 0.18s, transform 0.18s;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+        }
+        .gallery-mini-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+            border-radius: 5px;
+        }
+        .gallery-mini-thumb.gmt-active {
+            border-color: #16a34a;
+            transform: scale(1.08);
+        }
+        .gallery-caption {
+            display: none !important;
+        }
+    }
+
     /* ── Lightbox slider ── */
     #lb-viewport {
         position: relative;
@@ -8514,11 +8563,28 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                     dotsRow.appendChild(dot);
                 });
                 tileDiv.appendChild(dotsRow);
+
+                // ── miniatury (mobile/tablet) — zamiast napisu ──
+                const thumbsRow = document.createElement('div');
+                thumbsRow.className = 'gallery-mini-thumbs';
+                allPhotos.forEach((src, ti) => {
+                    const thumb = document.createElement('button');
+                    thumb.className = 'gallery-mini-thumb' + (ti === 0 ? ' gmt-active' : '');
+                    thumb.setAttribute('aria-label', `Zdjęcie ${ti + 1}`);
+                    const tImg = document.createElement('img');
+                    tImg.src = src;
+                    tImg.alt = '';
+                    tImg.loading = 'lazy';
+                    thumb.appendChild(tImg);
+                    thumb.addEventListener('click', e => { e.stopPropagation(); img._setPhoto(ti); });
+                    thumbsRow.appendChild(thumb);
+                });
+                tileDiv.appendChild(thumbsRow);
             }
             // zachowaj referencję do allPhotos dla lightboxa
             img._allPhotos = allPhotos;
 
-            // ── podpis ──
+            // ── podpis (desktop only — na mobile zastąpiony miniaturami) ──
             const captionDiv = document.createElement('div');
             captionDiv.className = 'gallery-caption';
             captionDiv.textContent = allPhotos.length > 1
