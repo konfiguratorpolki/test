@@ -1721,22 +1721,22 @@ body.no-scroll {
         }
         .gts-thumb {
             flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 2px solid transparent;
+            width: 42px;
+            height: 42px;
+            border-radius: 9px;
+            border: none;
             overflow: hidden;
             padding: 0;
             cursor: pointer;
             background: #e5e7eb;
             transition:
-                border-color 0.2s cubic-bezier(.4,0,.2,1),
-                transform 0.25s cubic-bezier(.34,1.56,.64,1),
-                box-shadow 0.2s ease,
+                width  0.28s cubic-bezier(.34,1.38,.64,1),
+                height 0.28s cubic-bezier(.34,1.38,.64,1),
+                box-shadow 0.22s ease,
                 opacity 0.2s ease;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.10);
-            opacity: 0.72;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            opacity: 0.6;
             outline: none;
         }
         .gts-thumb img {
@@ -1745,22 +1745,19 @@ body.no-scroll {
             object-fit: cover;
             display: block;
             pointer-events: none;
-            border-radius: 6px;
+            border-radius: 7px;
         }
         .gts-thumb:active:not(.gts-active) {
-            transform: scale(0.88);
-            transition: transform 0.08s ease !important;
+            width: 36px;
+            height: 36px;
+            transition: width 0.08s ease, height 0.08s ease !important;
         }
         .gts-thumb.gts-active {
-            border-color: #16a34a;
-            transform: scale(1.12);
+            width: 54px;
+            height: 54px;
+            border-radius: 11px;
             opacity: 1;
-            box-shadow: 0 0 0 3px rgba(22,163,74,0.18), 0 2px 8px rgba(22,163,74,0.22);
-            transition:
-                border-color 0.15s ease,
-                transform 0.3s cubic-bezier(.34,1.56,.64,1),
-                box-shadow 0.2s ease,
-                opacity 0.15s ease;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.22);
         }
     }
 
@@ -8650,15 +8647,24 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                     tileDiv.querySelectorAll('.gallery-mini-thumb').forEach((t, ti) => t.classList.toggle('gmt-active', ti === idx));
                 };
 
-                // ── swipe na mobile — wyższy próg żeby nie mylić z tapem ──
-                let _tx = 0, _ty = 0, _tt = 0;
-                imgContainer.addEventListener('touchstart', e => { _tx = e.touches[0].clientX; _ty = e.touches[0].clientY; _tt = Date.now(); }, { passive: true });
+                // ── swipe wewnątrz kafelka (zmiana zdjęcia w pod-galerii) ──
+                // Śledzimy też pozycję scroll galerii — jeśli galeria się przesunęła, to NIE przełączamy zdjęcia
+                let _tx = 0, _ty = 0, _tt = 0, _tscroll = 0;
+                imgContainer.addEventListener('touchstart', e => {
+                    _tx = e.touches[0].clientX;
+                    _ty = e.touches[0].clientY;
+                    _tt = Date.now();
+                    _tscroll = galleryImageArea ? galleryImageArea.scrollLeft : 0;
+                }, { passive: true });
                 imgContainer.addEventListener('touchend', e => {
                     const dx = e.changedTouches[0].clientX - _tx;
                     const dy = e.changedTouches[0].clientY - _ty;
                     const dt = Date.now() - _tt;
-                    // Swipe: minimum 60px poziomo, bardziej poziomy niż pionowy, i nie za wolny
-                    if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 60 && dt < 500) {
+                    const scrollDelta = galleryImageArea ? Math.abs(galleryImageArea.scrollLeft - _tscroll) : 0;
+                    // Jeśli galeria się przewinęła o więcej niż 8px — to był scroll galerii, nie swipe zdjęcia
+                    if (scrollDelta > 8) return;
+                    // Swipe: minimum 75px poziomo, 2x bardziej poziomy niż pionowy, szybki gest
+                    if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 75 && dt < 400) {
                         const next = Math.max(0, Math.min(allPhotos.length - 1, currentPhotoIdx + (dx < 0 ? 1 : -1)));
                         if (next !== currentPhotoIdx) setPhoto(next);
                     }
