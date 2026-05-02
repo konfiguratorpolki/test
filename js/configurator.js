@@ -877,23 +877,26 @@ function updateModularIconActiveStates() {
         // Parametry materiału — dopasowane do wyglądu prawdziwej półki (hiperrealistyczna referencja)
         // SHELF3D_MAT_COLOR inicjalizowany leniwie (THREE może nie być gotowe przy deklaracji)
         let SHELF3D_MAT_COLOR       = null; // THREE.Color — init w makeMaterial
-        // Cieplejszy, jaśniejszy ton — pozwala teksturze "świecić" jak na fotografii studyjnej
-        let SHELF3D_MAT_COLOR_R     = 0.70;
-        let SHELF3D_MAT_COLOR_G     = 0.58;
-        let SHELF3D_MAT_COLOR_B     = 0.42;
+        // Neutralny, lekko szary brąz — bez żółto-pomarańczowego przebarwienia
+        let SHELF3D_MAT_COLOR_R     = 0.58;
+        let SHELF3D_MAT_COLOR_G     = 0.50;
+        let SHELF3D_MAT_COLOR_B     = 0.40;
         // Niższa szorstkość = subtelne refleksy w słojach jak na zdjęciu lakierowanego dębu
-        let SHELF3D_MAT_ROUGHNESS   = 0.55;
-        // Mocniejsza normal-mapa = bardziej wyraziste słoje i pory drewna
-        let SHELF3D_MAT_NORMAL      = 0.95;
-        // Silniejsze odbicia środowiska = realistyczny efekt studio HDR
-        let SHELF3D_MAT_ENV         = 0.95;
-        let SHELF3D_MAT_CLEARCOAT   = 0.18;
-        let SHELF3D_MAT_CC_ROUGH    = 0.45;
+        let SHELF3D_MAT_ROUGHNESS   = 0.62;
+        // Normal-mapa — wyraziste, ale nie przesadzone słoje
+        let SHELF3D_MAT_NORMAL      = 0.85;
+        // Odbicia środowiska — umiarkowane
+        let SHELF3D_MAT_ENV         = 0.80;
+        let SHELF3D_MAT_CLEARCOAT   = 0.15;
+        let SHELF3D_MAT_CC_ROUGH    = 0.50;
         // sheen w Three.js r128 = Color (nie float jak w r139+); sheenColor/sheenRoughness nie istnieją w r128
-        let SHELF3D_MAT_SHEEN_ON    = true;  // czy włączyć sheen
-        // Filtr canvasa: więcej kontrastu i nasycenia — efekt "fotografii produktowej"
-        let SHELF3D_CANVAS_CONTRAST = 1.18;
-        let SHELF3D_CANVAS_SAT      = 1.08;
+        let SHELF3D_MAT_SHEEN_ON    = false;  // wyłączamy aksamit — był źródłem nadmiernej saturacji
+        // Filtr canvasa: kontrast bez nadmiernego nasycenia, lekka korekta odcienia ku chłodowi
+        let SHELF3D_CANVAS_CONTRAST = 1.12;
+        let SHELF3D_CANVAS_SAT      = 0.85;
+        let SHELF3D_CANVAS_HUE      = -8;    // stopnie (-30..+30), minus = chłodniej, plus = cieplej
+        let SHELF3D_SHADOW_OPACITY  = 0.22;
+        let SHELF3D_RIM_INTENSITY   = 0.60;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -1090,7 +1093,7 @@ function updateModularIconActiveStates() {
             });
         }
 
-        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.20; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = true; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfff5e8, 0x8899aa, 0.45); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff2e0, 2.4); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 4; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xddeeff, 0.55); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _rimLight = new THREE.DirectionalLight(0xfff0d8, 0.60); _rimLight.position.set(0, 6, -10); _rimLight.name = '__rimLight__'; scene.add(_rimLight); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.22, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); (function(){ const _bc=document.createElement('canvas'); _bc.width=512; _bc.height=256; const _bx=_bc.getContext('2d'); const _bg=_bx.createRadialGradient(256,128,0,256,128,240); _bg.addColorStop(0,'rgba(0,0,0,0.48)'); _bg.addColorStop(0.30,'rgba(0,0,0,0.26)'); _bg.addColorStop(0.65,'rgba(0,0,0,0.08)'); _bg.addColorStop(1,'rgba(0,0,0,0)'); _bx.fillStyle=_bg; _bx.fillRect(0,0,512,256); const _bt=new THREE.CanvasTexture(_bc); const _bm=new THREE.MeshBasicMaterial({map:_bt,transparent:true,depthWrite:false}); const _bmesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),_bm); _bmesh.rotation.x=-Math.PI/2; _bmesh.position.y=-5.02; _bmesh.name='__blobShadow__'; scene.add(_bmesh); })(); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+')'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.10; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = true; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfdf6ec, 0x8a9aaa, 0.50); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8ee, 2.0); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 4; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xe8effa, 0.55); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _rimLight = new THREE.DirectionalLight(0xf0f4fa, SHELF3D_RIM_INTENSITY); _rimLight.position.set(0, 6, -10); _rimLight.name = '__rimLight__'; scene.add(_rimLight); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: SHELF3D_SHADOW_OPACITY, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); (function(){ const _bc=document.createElement('canvas'); _bc.width=512; _bc.height=256; const _bx=_bc.getContext('2d'); const _bg=_bx.createRadialGradient(256,128,0,256,128,240); _bg.addColorStop(0,'rgba(0,0,0,0.48)'); _bg.addColorStop(0.30,'rgba(0,0,0,0.26)'); _bg.addColorStop(0.65,'rgba(0,0,0,0.08)'); _bg.addColorStop(1,'rgba(0,0,0,0)'); _bx.fillStyle=_bg; _bx.fillRect(0,0,512,256); const _bt=new THREE.CanvasTexture(_bc); const _bm=new THREE.MeshBasicMaterial({map:_bt,transparent:true,depthWrite:false}); const _bmesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),_bm); _bmesh.rotation.x=-Math.PI/2; _bmesh.position.y=-5.02; _bmesh.name='__blobShadow__'; scene.add(_bmesh); })(); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+') hue-rotate('+SHELF3D_CANVAS_HUE+'deg)'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
@@ -1104,16 +1107,20 @@ function updateModularIconActiveStates() {
                 hemiInt:     _dbgHemi.intensity,
                 dir1Int:     _dbgDir1.intensity,
                 dir2Int:     _dbgDir2.intensity,
+                rimInt:      SHELF3D_RIM_INTENSITY,
                 roughness:   SHELF3D_MAT_ROUGHNESS,
                 normalScale: SHELF3D_MAT_NORMAL,
                 envInt:      SHELF3D_MAT_ENV,
                 colorDark:   SHELF3D_MAT_COLOR_R,
                 colorWarm:   SHELF3D_MAT_COLOR_G,
+                colorBlue:   SHELF3D_MAT_COLOR_B,
                 clearcoat:   SHELF3D_MAT_CLEARCOAT,
                 ccRough:     SHELF3D_MAT_CC_ROUGH,
                 sheenOn:     SHELF3D_MAT_SHEEN_ON ? 1 : 0,
                 contrast:    SHELF3D_CANVAS_CONTRAST,
                 saturation:  SHELF3D_CANVAS_SAT,
+                hue:         SHELF3D_CANVAS_HUE,
+                shadowOp:    SHELF3D_SHADOW_OPACITY,
             };
             const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
             const btn = document.createElement('button');
@@ -1143,6 +1150,7 @@ function updateModularIconActiveStates() {
                 const vel=document.createElement('span'); vel.style.color='#e5e7eb'; vel.id='dbgv_'+key; vel.textContent=cfg[key].toFixed(2);
                 top.appendChild(lbl); top.appendChild(vel);
                 const inp=document.createElement('input'); inp.type='range'; inp.min=min; inp.max=max; inp.step=step; inp.value=cfg[key];
+                inp.dataset.key=key;
                 inp.style.cssText='width:100%;cursor:pointer;accent-color:#f59e0b;height:4px;';
                 inp.addEventListener('input',()=>{ cfg[key]=parseFloat(inp.value); vel.textContent=cfg[key].toFixed(2); cb(cfg[key]); updateCode(); });
                 w.appendChild(top); w.appendChild(inp); return w;
@@ -1166,28 +1174,59 @@ function updateModularIconActiveStates() {
             // === Oświetlenie ===
             panel.appendChild(sec('💡 Oświetlenie'));
             panel.appendChild(row('Światło ogólne (hemisphere)','hemiInt',0,1.5,0.01, v=>{ _dbgHemi.intensity=v; }));
-            panel.appendChild(row('Światło główne (przód-góra)','dir1Int',0,2,0.01, v=>{ _dbgDir1.intensity=v; }));
-            panel.appendChild(row('Światło boczne (tył)','dir2Int',0,1,0.01, v=>{ _dbgDir2.intensity=v; }));
+            panel.appendChild(row('Światło główne (przód-góra)','dir1Int',0,3,0.01, v=>{ _dbgDir1.intensity=v; }));
+            panel.appendChild(row('Światło boczne (tył)','dir2Int',0,1.5,0.01, v=>{ _dbgDir2.intensity=v; }));
+            panel.appendChild(row('Rim light (kontur z tyłu)','rimInt',0,1.5,0.01, v=>{ SHELF3D_RIM_INTENSITY=v; const _rl=scene.getObjectByName('__rimLight__'); if(_rl) _rl.intensity=v; }));
             // === Kolor drewna ===
-            function applyFilter(){ renderer.domElement.style.filter='contrast('+cfg.contrast+') saturate('+cfg.saturation+')'; }
+            function applyFilter(){ renderer.domElement.style.filter='contrast('+cfg.contrast+') saturate('+cfg.saturation+') hue-rotate('+cfg.hue+'deg)'; }
             function applyColor(){
-                SHELF3D_MAT_COLOR_R=cfg.colorDark; SHELF3D_MAT_COLOR_G=cfg.colorWarm; SHELF3D_MAT_COLOR_B=cfg.colorDark*0.60;
+                SHELF3D_MAT_COLOR_R=cfg.colorDark; SHELF3D_MAT_COLOR_G=cfg.colorWarm; SHELF3D_MAT_COLOR_B=cfg.colorBlue;
                 const c=new THREE.Color(SHELF3D_MAT_COLOR_R,SHELF3D_MAT_COLOR_G,SHELF3D_MAT_COLOR_B);
                 SHELF3D_MAT_COLOR=c;
                 scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.color.set(c);o.material.needsUpdate=true;} });
             }
-            panel.appendChild(sec('🎨 Kolor drewna'));
-            panel.appendChild(row('Jasność koloru (ciemniej←)','colorDark',0.3,1.0,0.01, v=>{ applyColor(); }));
-            panel.appendChild(row('Ciepłota (zimno←→ciepło)','colorWarm',0.3,0.9,0.01, v=>{ applyColor(); }));
+            function applyShadow(){ SHELF3D_SHADOW_OPACITY=cfg.shadowOp; const _sf=scene.getObjectByName('__shadowFloor__'); if(_sf && _sf.material){ _sf.material.opacity=cfg.shadowOp; _sf.material.needsUpdate=true; } }
+            panel.appendChild(sec('🎨 Kolor drewna (kanały RGB)'));
+            panel.appendChild(row('R — czerwień (jasność/intensywność)','colorDark',0.2,1.0,0.01, v=>{ applyColor(); }));
+            panel.appendChild(row('G — zieleń (ciepłota)','colorWarm',0.2,0.9,0.01, v=>{ applyColor(); }));
+            panel.appendChild(row('B — błękit (chłód, łagodzi żółć)','colorBlue',0.2,0.9,0.01, v=>{ applyColor(); }));
+            // === Presety koloru ===
+            panel.appendChild(sec('🎯 Szybkie presety odcienia'));
+            const presetWrap=document.createElement('div'); presetWrap.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:9px;';
+            function mkPreset(label, vals, bg){
+                const b=document.createElement('button'); b.textContent=label;
+                b.style.cssText='padding:8px 4px;border:1px solid #2a2a3a;background:'+bg+';color:#fff;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold;';
+                b.onclick=()=>{
+                    Object.keys(vals).forEach(k=>{
+                        cfg[k]=vals[k];
+                        const inp=panel.querySelector('input[type=range][data-key="'+k+'"]');
+                        const lbl=panel.querySelector('#dbgv_'+k);
+                        if(inp) inp.value=vals[k];
+                        if(lbl) lbl.textContent=Number(vals[k]).toFixed(2);
+                    });
+                    applyColor(); applyFilter(); applyShadow();
+                    if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials();
+                    updateCode();
+                };
+                return b;
+            }
+            presetWrap.appendChild(mkPreset('❄ Chłodny', { colorDark:0.52, colorWarm:0.48, colorBlue:0.42, hue:-12, saturation:0.78, contrast:1.12 }, '#1e3a5f'));
+            presetWrap.appendChild(mkPreset('⚖ Neutralny', { colorDark:0.58, colorWarm:0.50, colorBlue:0.40, hue:-8, saturation:0.85, contrast:1.12 }, '#3f3f46'));
+            presetWrap.appendChild(mkPreset('☀ Ciepły', { colorDark:0.70, colorWarm:0.58, colorBlue:0.40, hue:0, saturation:1.00, contrast:1.15 }, '#92400e'));
+            panel.appendChild(presetWrap);
             // === Lakier ===
             panel.appendChild(sec('✨ Lakier (clearcoat) i Sheen'));
             panel.appendChild(row('Clearcoat — warstwa lakieru','clearcoat',0,1,0.01, v=>{ SHELF3D_MAT_CLEARCOAT=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoat=v;o.material.needsUpdate=true;} }); }));
             panel.appendChild(row('Matowość lakieru','ccRough',0,1,0.01, v=>{ SHELF3D_MAT_CC_ROUGH=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoatRoughness=v;o.material.needsUpdate=true;} }); }));
             panel.appendChild(row('Sheen — aksamit (0=wył, 1=wł)','sheenOn',0,1,1, v=>{ SHELF3D_MAT_SHEEN_ON=(v>0); if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials(); }));
             // === Post-processing ===
-            panel.appendChild(sec('🖼 Obraz (kontrast / nasycenie)'));
+            panel.appendChild(sec('🖼 Obraz (kontrast / nasycenie / odcień)'));
             panel.appendChild(row('Kontrast','contrast',0.7,1.8,0.01, v=>{ SHELF3D_CANVAS_CONTRAST=v; applyFilter(); }));
-            panel.appendChild(row('Nasycenie kolorów','saturation',0.5,2.0,0.01, v=>{ SHELF3D_CANVAS_SAT=v; applyFilter(); }));
+            panel.appendChild(row('Nasycenie kolorów','saturation',0.3,2.0,0.01, v=>{ SHELF3D_CANVAS_SAT=v; applyFilter(); }));
+            panel.appendChild(row('Hue rotate (- chłodno / + ciepło)','hue',-30,30,1, v=>{ SHELF3D_CANVAS_HUE=v; applyFilter(); }));
+            // === Cień ===
+            panel.appendChild(sec('🌑 Cień kontaktowy'));
+            panel.appendChild(row('Siła cienia pod półką','shadowOp',0,0.6,0.01, v=>{ applyShadow(); }));
             // === Materiał ===
             panel.appendChild(sec('🔩 Materiał drewna'));
             panel.appendChild(row('Chropowatość (mała=połysk)','roughness',0,1,0.01, v=>{ SHELF3D_MAT_ROUGHNESS=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.roughness=v;o.material.needsUpdate=true;} }); }));
@@ -1205,7 +1244,9 @@ function updateModularIconActiveStates() {
                 cp.textContent=
 '// Skala tekstury\nlet SHELF3D_SCALE_HORIZ = '+cfg.scaleH.toFixed(1)+';\n'+
 'let SHELF3D_SCALE_SIDE  = '+cfg.scaleV.toFixed(1)+';\n\n'+
-'// Kolor drewna\nlet SHELF3D_MAT_COLOR = new THREE.Color('+cfg.colorDark.toFixed(2)+','+cfg.colorWarm.toFixed(2)+','+(cfg.colorDark*0.60).toFixed(2)+');\n\n'+
+'// Kolor drewna (R, G, B osobno)\nlet SHELF3D_MAT_COLOR_R = '+cfg.colorDark.toFixed(2)+';\n'+
+'let SHELF3D_MAT_COLOR_G = '+cfg.colorWarm.toFixed(2)+';\n'+
+'let SHELF3D_MAT_COLOR_B = '+cfg.colorBlue.toFixed(2)+';\n\n'+
 '// Materiał\nlet SHELF3D_MAT_ROUGHNESS = '+cfg.roughness.toFixed(2)+';\n'+
 'let SHELF3D_MAT_NORMAL    = '+cfg.normalScale.toFixed(2)+';\n'+
 'let SHELF3D_MAT_ENV       = '+cfg.envInt.toFixed(2)+';\n'+
@@ -1214,8 +1255,10 @@ function updateModularIconActiveStates() {
 'let SHELF3D_MAT_SHEEN_ON  = '+(cfg.sheenOn>0)+';\n\n'+
 '// Obraz\nrenderer.toneMappingExposure = '+cfg.exposure.toFixed(2)+';\n'+
 'let SHELF3D_CANVAS_CONTRAST = '+cfg.contrast.toFixed(2)+';\n'+
-'let SHELF3D_CANVAS_SAT      = '+cfg.saturation.toFixed(2)+';\n\n'+
-'// Oświetlenie\nHemisphere: '+cfg.hemiInt.toFixed(2)+'; Główne: '+cfg.dir1Int.toFixed(2)+'; Boczne: '+cfg.dir2Int.toFixed(2)+';';
+'let SHELF3D_CANVAS_SAT      = '+cfg.saturation.toFixed(2)+';\n'+
+'let SHELF3D_CANVAS_HUE      = '+cfg.hue+';   // stopnie\n\n'+
+'// Cień\nlet SHELF3D_SHADOW_OPACITY = '+cfg.shadowOp.toFixed(2)+';\n\n'+
+'// Oświetlenie\nHemi: '+cfg.hemiInt.toFixed(2)+'; Key: '+cfg.dir1Int.toFixed(2)+'; Fill: '+cfg.dir2Int.toFixed(2)+'; Rim: '+cfg.rimInt.toFixed(2)+';';
             }
             updateCode();
             function toggle(){ panel.style.display=panel.style.display==='none'?'block':'none'; }
