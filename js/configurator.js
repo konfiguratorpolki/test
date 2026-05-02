@@ -875,14 +875,18 @@ function updateModularIconActiveStates() {
         let SHELF3D_SCALE = 11.0;
 
         // Parametry materiału — dopasowane do wyglądu prawdziwej półki
-        let SHELF3D_MAT_COLOR       = new THREE.Color(0.72, 0.58, 0.43);
+        // SHELF3D_MAT_COLOR inicjalizowany leniwie (THREE może nie być gotowe przy deklaracji)
+        let SHELF3D_MAT_COLOR       = null; // THREE.Color(0.72, 0.58, 0.43) — init w makeMaterial
+        let SHELF3D_MAT_COLOR_R     = 0.72;
+        let SHELF3D_MAT_COLOR_G     = 0.58;
+        let SHELF3D_MAT_COLOR_B     = 0.43;
         let SHELF3D_MAT_ROUGHNESS   = 0.68;
         let SHELF3D_MAT_NORMAL      = 0.60;
         let SHELF3D_MAT_ENV         = 0.70;
         let SHELF3D_MAT_CLEARCOAT   = 0.22;
         let SHELF3D_MAT_CC_ROUGH    = 0.35;
-        let SHELF3D_MAT_SHEEN       = 0.18;
-        let SHELF3D_MAT_SHEEN_ROUGH = 0.75;
+        // sheen w Three.js r128 = Color (nie float jak w r139+); sheenColor/sheenRoughness nie istnieją w r128
+        let SHELF3D_MAT_SHEEN_ON    = true;  // czy włączyć sheen
         let SHELF3D_CANVAS_CONTRAST = 1.12;
         let SHELF3D_CANVAS_SAT      = 1.18;
 
@@ -1006,7 +1010,9 @@ function updateModularIconActiveStates() {
             const rClone = _cloneTex(roughTex, false);
 
             // MeshPhysicalMaterial z clearcoat i sheen dla realistycznego drewna
-            return new THREE.MeshPhysicalMaterial({
+            // Uwaga: Three.js r128 — sheen=Color (nie float), brak sheenColor/sheenRoughness
+            if (!SHELF3D_MAT_COLOR) SHELF3D_MAT_COLOR = new THREE.Color(SHELF3D_MAT_COLOR_R, SHELF3D_MAT_COLOR_G, SHELF3D_MAT_COLOR_B);
+            const matParams = {
                 map:                fClone,
                 color:              SHELF3D_MAT_COLOR.clone(),
                 normalMap:          nClone || undefined,
@@ -1018,10 +1024,12 @@ function updateModularIconActiveStates() {
                 reflectivity:       0.05,
                 clearcoat:          SHELF3D_MAT_CLEARCOAT,
                 clearcoatRoughness: SHELF3D_MAT_CC_ROUGH,
-                sheen:              SHELF3D_MAT_SHEEN,
-                sheenRoughness:     SHELF3D_MAT_SHEEN_ROUGH,
-                sheenColor:         new THREE.Color(0.75, 0.50, 0.25),
-            });
+            };
+            // sheen w r128 to Color (aksamitny połysk), dostępny jako opcja
+            if (SHELF3D_MAT_SHEEN_ON) {
+                matParams.sheen = new THREE.Color(0.55, 0.38, 0.18);
+            }
+            return new THREE.MeshPhysicalMaterial(matParams);
         }
 
         function shelf3dUpdateFactory() {
@@ -1094,11 +1102,11 @@ function updateModularIconActiveStates() {
                 roughness:   SHELF3D_MAT_ROUGHNESS,
                 normalScale: SHELF3D_MAT_NORMAL,
                 envInt:      SHELF3D_MAT_ENV,
-                colorDark:   0.72,
-                colorWarm:   0.58,
+                colorDark:   SHELF3D_MAT_COLOR_R,
+                colorWarm:   SHELF3D_MAT_COLOR_G,
                 clearcoat:   SHELF3D_MAT_CLEARCOAT,
                 ccRough:     SHELF3D_MAT_CC_ROUGH,
-                sheen:       SHELF3D_MAT_SHEEN,
+                sheenOn:     SHELF3D_MAT_SHEEN_ON ? 1 : 0,
                 contrast:    SHELF3D_CANVAS_CONTRAST,
                 saturation:  SHELF3D_CANVAS_SAT,
             };
@@ -1157,15 +1165,20 @@ function updateModularIconActiveStates() {
             panel.appendChild(row('Światło boczne (tył)','dir2Int',0,1,0.01, v=>{ _dbgDir2.intensity=v; }));
             // === Kolor drewna ===
             function applyFilter(){ renderer.domElement.style.filter='contrast('+cfg.contrast+') saturate('+cfg.saturation+')'; }
-            function applyColor(){ const c=new THREE.Color(cfg.colorDark,cfg.colorWarm,cfg.colorDark*0.60); SHELF3D_MAT_COLOR=c; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.color.set(c);o.material.needsUpdate=true;} }); }
+            function applyColor(){
+                SHELF3D_MAT_COLOR_R=cfg.colorDark; SHELF3D_MAT_COLOR_G=cfg.colorWarm; SHELF3D_MAT_COLOR_B=cfg.colorDark*0.60;
+                const c=new THREE.Color(SHELF3D_MAT_COLOR_R,SHELF3D_MAT_COLOR_G,SHELF3D_MAT_COLOR_B);
+                SHELF3D_MAT_COLOR=c;
+                scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.color.set(c);o.material.needsUpdate=true;} });
+            }
             panel.appendChild(sec('🎨 Kolor drewna'));
             panel.appendChild(row('Jasność koloru (ciemniej←)','colorDark',0.3,1.0,0.01, v=>{ applyColor(); }));
             panel.appendChild(row('Ciepłota (zimno←→ciepło)','colorWarm',0.3,0.9,0.01, v=>{ applyColor(); }));
             // === Lakier ===
-            panel.appendChild(sec('✨ Lakier i aksamit (sheen)'));
+            panel.appendChild(sec('✨ Lakier (clearcoat) i Sheen'));
             panel.appendChild(row('Clearcoat — warstwa lakieru','clearcoat',0,1,0.01, v=>{ SHELF3D_MAT_CLEARCOAT=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoat=v;o.material.needsUpdate=true;} }); }));
             panel.appendChild(row('Matowość lakieru','ccRough',0,1,0.01, v=>{ SHELF3D_MAT_CC_ROUGH=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoatRoughness=v;o.material.needsUpdate=true;} }); }));
-            panel.appendChild(row('Sheen — aksamit włókien','sheen',0,1,0.01, v=>{ SHELF3D_MAT_SHEEN=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.sheen!==undefined){o.material.sheen=v;o.material.needsUpdate=true;} }); }));
+            panel.appendChild(row('Sheen — aksamit (0=wył, 1=wł)','sheenOn',0,1,1, v=>{ SHELF3D_MAT_SHEEN_ON=(v>0); if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials(); }));
             // === Post-processing ===
             panel.appendChild(sec('🖼 Obraz (kontrast / nasycenie)'));
             panel.appendChild(row('Kontrast','contrast',0.7,1.8,0.01, v=>{ SHELF3D_CANVAS_CONTRAST=v; applyFilter(); }));
@@ -1193,7 +1206,7 @@ function updateModularIconActiveStates() {
 'let SHELF3D_MAT_ENV       = '+cfg.envInt.toFixed(2)+';\n'+
 'let SHELF3D_MAT_CLEARCOAT = '+cfg.clearcoat.toFixed(2)+';\n'+
 'let SHELF3D_MAT_CC_ROUGH  = '+cfg.ccRough.toFixed(2)+';\n'+
-'let SHELF3D_MAT_SHEEN     = '+cfg.sheen.toFixed(2)+';\n\n'+
+'let SHELF3D_MAT_SHEEN_ON  = '+(cfg.sheenOn>0)+';\n\n'+
 '// Obraz\nrenderer.toneMappingExposure = '+cfg.exposure.toFixed(2)+';\n'+
 'let SHELF3D_CANVAS_CONTRAST = '+cfg.contrast.toFixed(2)+';\n'+
 'let SHELF3D_CANVAS_SAT      = '+cfg.saturation.toFixed(2)+';\n\n'+
