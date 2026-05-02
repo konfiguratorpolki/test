@@ -868,8 +868,8 @@ function updateModularIconActiveStates() {
         const SHELF3D_ENV_PATH      = 'tekstura/env-neon_photostudio_custom_bw_2k.jpg';
 
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
-        // SHELF3D_SCALE = 3.0 → jedno powtórzenie co ~30 cm — duże wyraźne słoje jak w referencji
-        const SHELF3D_SCALE = 3.0;
+        // SHELF3D_SCALE = 1.8 → jedno powtórzenie co ~18 cm — drobniejsze słoje, bardziej realistyczne
+        const SHELF3D_SCALE = 1.8;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
