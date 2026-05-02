@@ -871,8 +871,8 @@ function updateModularIconActiveStates() {
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
         // Wyższa wartość = większy wzór drewna (mniej powtórzeń na planszy)
         // Zmniejszono z 7.0 → 3.5 aby słoje były widoczne przy normalnym oddaleniu kamery
-        let SHELF3D_SCALE_HORIZ = 3.5;  // półki poziome
-        let SHELF3D_SCALE_SIDE  = 3.5;  // boki i pionowe elementy
+        let SHELF3D_SCALE_HORIZ = 1.5;  // półki poziome
+        let SHELF3D_SCALE_SIDE  = 1.5;  // boki i pionowe elementy
         // alias dla wstecznej kompatybilności
         let SHELF3D_SCALE = 3.5;
 
