@@ -1,5 +1,6 @@
 // --- Zmienne globalne i elementy DOM ---
         let scene, camera, renderer, shelfGroup, controls;
+        let _dbgHemi, _dbgDir1, _dbgDir2;
         let shelfContainer, threeJsCanvasWrapper, materialSwiperInstance, gallerySwiperInstance;
         let shelfTypeSelect, widthSelect, heightSelect, depthSelect, shelfCountSelect;
         let customWidthInput, customWidthDisplay, customWidthFee;
@@ -869,7 +870,7 @@ function updateModularIconActiveStates() {
 
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
         // SHELF3D_SCALE = 1.8 → jedno powtórzenie co ~18 cm — drobniejsze słoje, bardziej realistyczne
-        const SHELF3D_SCALE = 1.8;
+        let SHELF3D_SCALE = 1.8;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -1051,11 +1052,111 @@ function updateModularIconActiveStates() {
             });
         }
 
-        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xf0f0f0); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.72; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); scene.add(new THREE.HemisphereLight(0xffe8d0, 0x221a00, 0.45)); const directionalLight = new THREE.DirectionalLight(0xfff5e8, 0.65); directionalLight.position.set(5, 10, 6); scene.add(directionalLight); const directionalLight2 = new THREE.DirectionalLight(0xfff0c0, 0.18); directionalLight2.position.set(-3, 3, -2); scene.add(directionalLight2); shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xf0f0f0); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.72; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xffe8d0, 0x221a00, 0.45); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff5e8, 0.65); _dbgDir1.position.set(5, 10, 6); scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xfff0c0, 0.18); _dbgDir2.position.set(-3, 3, -2); scene.add(_dbgDir2); shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
-        controls.maxPolarAngle = _lockedPolar; if (controls) { controls.addEventListener('start', () => { autoRotateEnabled = false; }); controls.addEventListener('end', () => { /* nie wznawiaj obrotu po kliknięciu */ }); } window.addEventListener('resize', onWindowResize, false); updatePreview(true); animate(); }
+        controls.maxPolarAngle = _lockedPolar; if (controls) { controls.addEventListener('start', () => { autoRotateEnabled = false; }); controls.addEventListener('end', () => { /* nie wznawiaj obrotu po kliknięciu */ }); } window.addEventListener('resize', onWindowResize, false); updatePreview(true); animate(); shelf3dInitDebugPanel(); }
+        function shelf3dInitDebugPanel() {
+            if (!renderer || !scene || !_dbgHemi || !_dbgDir1 || !_dbgDir2) return;
+            const cfg = {
+                exposure:     renderer.toneMappingExposure,
+                scale:        SHELF3D_SCALE,
+                hemiInt:      _dbgHemi.intensity,
+                dir1Int:      _dbgDir1.intensity,
+                dir2Int:      _dbgDir2.intensity,
+                roughness:    0.68,
+                normalScale:  0.6,
+                envInt:       0.7,
+            };
+            // Przycisk otwierający panel
+            const btn = document.createElement('button');
+            btn.id = 'shelf3dDbgBtn';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
+            btn.title = 'Panel wizualny (Ctrl+Shift+D)';
+            btn.style.cssText = 'position:fixed;bottom:110px;right:15px;z-index:99999;width:42px;height:42px;border-radius:50%;background:#18181b;color:#f59e0b;border:2px solid #f59e0b;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.4);transition:transform 0.15s;';
+            btn.onmouseenter = () => btn.style.transform = 'scale(1.12)';
+            btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+            document.body.appendChild(btn);
+            // Panel
+            const panel = document.createElement('div');
+            panel.id = 'shelf3dDbg';
+            panel.style.cssText = 'display:none;position:fixed;top:10px;right:10px;z-index:99998;background:rgba(12,12,18,0.96);color:#f0f0f0;padding:16px;border-radius:14px;font-family:ui-monospace,monospace;font-size:12px;width:310px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);border:1px solid #2a2a3a;';
+            // Nagłówek
+            const hdr = document.createElement('div');
+            hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+            hdr.innerHTML = '<span style="font-size:14px;font-weight:bold;color:#f59e0b;letter-spacing:0.5px;">🎨 Panel wizualny 3D</span>';
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '&times;';
+            closeBtn.style.cssText = 'background:none;border:none;color:#888;cursor:pointer;font-size:20px;line-height:1;padding:0;';
+            hdr.appendChild(closeBtn);
+            panel.appendChild(hdr);
+            // Helpers
+            function sec(title) {
+                const d = document.createElement('div');
+                d.style.cssText = 'color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 7px;border-bottom:1px solid #2a2a3a;padding-bottom:4px;font-weight:bold;';
+                d.textContent = title;
+                return d;
+            }
+            function sliderRow(label, key, min, max, step, cb) {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'margin-bottom:9px;';
+                const top = document.createElement('div');
+                top.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:3px;';
+                const lbl = document.createElement('span'); lbl.textContent = label; lbl.style.color = '#9ca3af';
+                const valEl = document.createElement('span'); valEl.style.color = '#e5e7eb'; valEl.id = 'dbgv_'+key; valEl.textContent = cfg[key].toFixed(2);
+                top.appendChild(lbl); top.appendChild(valEl);
+                const inp = document.createElement('input');
+                inp.type='range'; inp.min=min; inp.max=max; inp.step=step; inp.value=cfg[key];
+                inp.style.cssText = 'width:100%;cursor:pointer;accent-color:#f59e0b;height:4px;';
+                inp.addEventListener('input', () => { cfg[key]=parseFloat(inp.value); valEl.textContent=cfg[key].toFixed(2); cb(cfg[key]); updateCode(); });
+                wrap.appendChild(top); wrap.appendChild(inp); return wrap;
+            }
+            // Sekcje
+            panel.appendChild(sec('🔆 Ekspozycja (jasność)'));
+            panel.appendChild(sliderRow('Jasność sceny', 'exposure', 0.3, 1.5, 0.01, v => { renderer.toneMappingExposure = v; }));
+            panel.appendChild(sec('🌲 Tekstura drewna'));
+            panel.appendChild(sliderRow('Skala słoi (↓ = drobniejsze)', 'scale', 0.5, 5.0, 0.05, v => { SHELF3D_SCALE = v; if(typeof updatePreview==='function') updatePreview(true); }));
+            panel.appendChild(sec('💡 Oświetlenie'));
+            panel.appendChild(sliderRow('Hemisphere (niebo)', 'hemiInt', 0, 1.5, 0.01, v => { _dbgHemi.intensity = v; }));
+            panel.appendChild(sliderRow('Światło główne (przód)', 'dir1Int', 0, 2, 0.01, v => { _dbgDir1.intensity = v; }));
+            panel.appendChild(sliderRow('Światło boczne (tył)', 'dir2Int', 0, 1, 0.01, v => { _dbgDir2.intensity = v; }));
+            panel.appendChild(sec('🪵 Materiał drewna'));
+            panel.appendChild(sliderRow('Chropowatość', 'roughness', 0, 1, 0.01, v => { scene.traverse(o => { if(o.isMesh && o.material && o.material.isMeshPhysicalMaterial && o.material.map) { o.material.roughness=v; o.material.needsUpdate=true; } }); }));
+            panel.appendChild(sliderRow('Normalna (głębokość słoi)', 'normalScale', 0, 1.5, 0.01, v => { scene.traverse(o => { if(o.isMesh && o.material && o.material.normalMap) { o.material.normalScale.set(v,v); o.material.needsUpdate=true; } }); }));
+            panel.appendChild(sliderRow('Odbicia środowiska', 'envInt', 0, 2, 0.01, v => { scene.traverse(o => { if(o.isMesh && o.material && o.material.isMeshPhysicalMaterial && o.material.map) { o.material.envMapIntensity=v; o.material.needsUpdate=true; } }); }));
+            // Output kodu
+            const codeWrap = document.createElement('div');
+            codeWrap.style.cssText = 'margin-top:14px;border-top:1px solid #2a2a3a;padding-top:12px;';
+            const codeLbl = document.createElement('div');
+            codeLbl.style.cssText = 'color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px;font-weight:bold;';
+            codeLbl.textContent = '📋 Kod do wklejenia w configurator.js';
+            const codePre = document.createElement('pre');
+            codePre.id = 'dbgCode';
+            codePre.style.cssText = 'background:#09090f;padding:10px;border-radius:8px;font-size:10px;color:#86efac;overflow-x:auto;white-space:pre-wrap;margin:0;border:1px solid #1a2a1a;line-height:1.5;';
+            const copyBtn2 = document.createElement('button');
+            copyBtn2.textContent = '📋 Kopiuj wartości';
+            copyBtn2.style.cssText = 'margin-top:8px;width:100%;padding:8px;background:#f59e0b;color:#000;border:none;border-radius:7px;cursor:pointer;font-weight:bold;font-size:12px;';
+            copyBtn2.onclick = () => { navigator.clipboard.writeText(codePre.textContent).then(() => { copyBtn2.textContent='✅ Skopiowano!'; setTimeout(()=>copyBtn2.textContent='📋 Kopiuj wartości',2000); }); };
+            codeWrap.appendChild(codeLbl); codeWrap.appendChild(codePre); codeWrap.appendChild(copyBtn2);
+            panel.appendChild(codeWrap);
+            document.body.appendChild(panel);
+            function updateCode() {
+                codePre.textContent =
+'renderer.toneMappingExposure = '+cfg.exposure.toFixed(2)+';\n'+
+'let SHELF3D_SCALE = '+cfg.scale.toFixed(2)+';\n\n'+
+'// Oświetlenie\nnew THREE.HemisphereLight(0xffe8d0,0x221a00,'+cfg.hemiInt.toFixed(2)+');\n'+
+'DirectionalLight(0xfff5e8, '+cfg.dir1Int.toFixed(2)+'); // główne\n'+
+'DirectionalLight(0xfff0c0, '+cfg.dir2Int.toFixed(2)+'); // boczne\n\n'+
+'// Materiał\nroughness: '+cfg.roughness.toFixed(2)+',\n'+
+'normalScale: '+cfg.normalScale.toFixed(2)+',\n'+
+'envMapIntensity: '+cfg.envInt.toFixed(2)+',';
+            }
+            updateCode();
+            function toggle() { panel.style.display = panel.style.display==='none'?'block':'none'; }
+            btn.onclick = toggle; closeBtn.onclick = toggle;
+            document.addEventListener('keydown', e => { if(e.ctrlKey && e.shiftKey && e.key==='D') { e.preventDefault(); toggle(); } });
+        }
         function onWindowResize() { const container = threeJsCanvasWrapper; if (!camera || !renderer || !container) return; camera.clearViewOffset(); if (renderer && renderer.domElement) renderer.domElement.style.transform = ''; shiftCanvasForHeight(); const width = container.clientWidth; const height = container.clientHeight; if (width > 0 && height > 0) { camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); } else { console.warn("Skipping resize for 3D canvas wrapper with zero dimensions."); } updateDividerIconsVisibility(); updateModularIconsVisibility(); }
         let _lastFrameDataUrl = null;
         let _lastFrameCounter = 0;
