@@ -877,26 +877,26 @@ function updateModularIconActiveStates() {
         // Parametry materiału — dopasowane do wyglądu prawdziwej półki (hiperrealistyczna referencja)
         // SHELF3D_MAT_COLOR inicjalizowany leniwie (THREE może nie być gotowe przy deklaracji)
         let SHELF3D_MAT_COLOR       = null; // THREE.Color — init w makeMaterial
-        // Neutralny, lekko szary brąz — bez żółto-pomarańczowego przebarwienia
-        let SHELF3D_MAT_COLOR_R     = 0.58;
-        let SHELF3D_MAT_COLOR_G     = 0.50;
-        let SHELF3D_MAT_COLOR_B     = 0.40;
-        // Niższa szorstkość = subtelne refleksy w słojach jak na zdjęciu lakierowanego dębu
-        let SHELF3D_MAT_ROUGHNESS   = 0.62;
-        // Normal-mapa — wyraziste, ale nie przesadzone słoje
-        let SHELF3D_MAT_NORMAL      = 0.85;
-        // Odbicia środowiska — umiarkowane
-        let SHELF3D_MAT_ENV         = 0.80;
-        let SHELF3D_MAT_CLEARCOAT   = 0.15;
-        let SHELF3D_MAT_CC_ROUGH    = 0.50;
+        // Stonowany szary brąz — referencja zdjęciowa, więcej kanału B = mniej żółci
+        let SHELF3D_MAT_COLOR_R     = 0.55;
+        let SHELF3D_MAT_COLOR_G     = 0.48;
+        let SHELF3D_MAT_COLOR_B     = 0.43;
+        // Wyższa szorstkość = bardziej matowe drewno bez plastikowego połysku
+        let SHELF3D_MAT_ROUGHNESS   = 0.72;
+        // Normal-mapa — łagodniejsze słoje
+        let SHELF3D_MAT_NORMAL      = 0.70;
+        // Odbicia środowiska — niskie, by nie podkręcały koloru
+        let SHELF3D_MAT_ENV         = 0.55;
+        let SHELF3D_MAT_CLEARCOAT   = 0.08;
+        let SHELF3D_MAT_CC_ROUGH    = 0.60;
         // sheen w Three.js r128 = Color (nie float jak w r139+); sheenColor/sheenRoughness nie istnieją w r128
-        let SHELF3D_MAT_SHEEN_ON    = false;  // wyłączamy aksamit — był źródłem nadmiernej saturacji
-        // Filtr canvasa: kontrast bez nadmiernego nasycenia, lekka korekta odcienia ku chłodowi
-        let SHELF3D_CANVAS_CONTRAST = 1.12;
-        let SHELF3D_CANVAS_SAT      = 0.85;
-        let SHELF3D_CANVAS_HUE      = -8;    // stopnie (-30..+30), minus = chłodniej, plus = cieplej
-        let SHELF3D_SHADOW_OPACITY  = 0.22;
-        let SHELF3D_RIM_INTENSITY   = 0.60;
+        let SHELF3D_MAT_SHEEN_ON    = false;
+        // Filtr canvasa: bardziej stonowany efekt fotograficzny
+        let SHELF3D_CANVAS_CONTRAST = 1.08;
+        let SHELF3D_CANVAS_SAT      = 0.72;
+        let SHELF3D_CANVAS_HUE      = -10;    // stopnie (-30..+30), minus = chłodniej, plus = cieplej
+        let SHELF3D_SHADOW_OPACITY  = 0.16;
+        let SHELF3D_RIM_INTENSITY   = 0.45;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -1093,7 +1093,7 @@ function updateModularIconActiveStates() {
             });
         }
 
-        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.10; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = true; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfdf6ec, 0x8a9aaa, 0.50); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8ee, 2.0); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 4; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xe8effa, 0.55); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _rimLight = new THREE.DirectionalLight(0xf0f4fa, SHELF3D_RIM_INTENSITY); _rimLight.position.set(0, 6, -10); _rimLight.name = '__rimLight__'; scene.add(_rimLight); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: SHELF3D_SHADOW_OPACITY, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); (function(){ const _bc=document.createElement('canvas'); _bc.width=512; _bc.height=256; const _bx=_bc.getContext('2d'); const _bg=_bx.createRadialGradient(256,128,0,256,128,240); _bg.addColorStop(0,'rgba(0,0,0,0.48)'); _bg.addColorStop(0.30,'rgba(0,0,0,0.26)'); _bg.addColorStop(0.65,'rgba(0,0,0,0.08)'); _bg.addColorStop(1,'rgba(0,0,0,0)'); _bx.fillStyle=_bg; _bx.fillRect(0,0,512,256); const _bt=new THREE.CanvasTexture(_bc); const _bm=new THREE.MeshBasicMaterial({map:_bt,transparent:true,depthWrite:false}); const _bmesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),_bm); _bmesh.rotation.x=-Math.PI/2; _bmesh.position.y=-5.02; _bmesh.name='__blobShadow__'; scene.add(_bmesh); })(); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+') hue-rotate('+SHELF3D_CANVAS_HUE+'deg)'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.10; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = true; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfdf6ec, 0x8a9aaa, 0.50); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8ee, 2.0); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 8; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xe8effa, 0.55); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _rimLight = new THREE.DirectionalLight(0xf0f4fa, SHELF3D_RIM_INTENSITY); _rimLight.position.set(0, 6, -10); _rimLight.name = '__rimLight__'; scene.add(_rimLight); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: SHELF3D_SHADOW_OPACITY, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); (function(){ const _bc=document.createElement('canvas'); _bc.width=512; _bc.height=256; const _bx=_bc.getContext('2d'); const _bg=_bx.createRadialGradient(256,128,0,256,128,240); _bg.addColorStop(0,'rgba(0,0,0,0.32)'); _bg.addColorStop(0.20,'rgba(0,0,0,0.20)'); _bg.addColorStop(0.50,'rgba(0,0,0,0.08)'); _bg.addColorStop(0.80,'rgba(0,0,0,0.02)'); _bg.addColorStop(1,'rgba(0,0,0,0)'); _bx.fillStyle=_bg; _bx.fillRect(0,0,512,256); const _bt=new THREE.CanvasTexture(_bc); const _bm=new THREE.MeshBasicMaterial({map:_bt,transparent:true,depthWrite:false}); const _bmesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),_bm); _bmesh.rotation.x=-Math.PI/2; _bmesh.position.y=-5.02; _bmesh.name='__blobShadow__'; scene.add(_bmesh); })(); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+') hue-rotate('+SHELF3D_CANVAS_HUE+'deg)'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
@@ -1453,9 +1453,9 @@ function fitCameraToShelf() {
           const _w = parseInt(config && config.width) || 0;
           // Dla półki 84 cm (tylko mug_shelf) na mobile — widok całkowicie frontalny
           const _isWide84 = _isMobile && _w === 84;
-          const _cz = _isWide84 ? 9.5 : (_isMobile ? (_h >= 80 ? 11 : 9) : (_h >= 80 ? 10 : 7));
-          const _cx = _isWide84 ? 0.0001 : -4;
-          const _cy = 0.5;
+          const _cz = _isWide84 ? 14 : (_isMobile ? (_h >= 80 ? 17 : 14) : (_h >= 80 ? 15 : 11));
+          const _cx = _isWide84 ? 0.0001 : -2.8;
+          const _cy = 1.0;
           // Target kamery — lekka korekta w dół żeby wyśrodkować półkę na mobile
           const _ct = _isMobile ? (_h >= 80 ? 0.5 : (_h >= 60 ? 0.8 : 1.0)) : 0;
           gsap.to(camera.position, {
@@ -1652,7 +1652,7 @@ function fitCameraToShelf() {
                     
                     const _mobOff = 0;
                     shelfGroup.position.y = _mobOff;
-                    scene.add(shelfGroup); shelfGroup.traverse(function(_m){ if(_m.isMesh){ _m.castShadow=true; _m.receiveShadow=true; } }); const _sf=scene.getObjectByName("__shadowFloor__"); if(_sf && shelfGroup){ setTimeout(function(){ if(!shelfGroup || !_sf) return; shelfGroup.updateMatrixWorld(true); const _bb=new THREE.Box3().setFromObject(shelfGroup); const _center=new THREE.Vector3(); _bb.getCenter(_center); const _floorY = _bb.min.y - 0.02; _sf.position.y = _floorY; const _bs=scene.getObjectByName('__blobShadow__'); if(_bs){ const _bw=(_bb.max.x-_bb.min.x)*1.6; const _bdp=(_bb.max.z-_bb.min.z)*1.4; _bs.scale.set(_bw,_bdp,1); _bs.position.x=_center.x; _bs.position.z=_center.z; _bs.position.y=_floorY-0.01; } if(_dbgDir1){ _dbgDir1.target.position.copy(_center); _dbgDir1.target.updateMatrixWorld(); } console.log("[SHADOW] floor Y=", _floorY, "center=", _center); },300); }
+                    scene.add(shelfGroup); shelfGroup.traverse(function(_m){ if(_m.isMesh){ _m.castShadow=true; _m.receiveShadow=true; } }); const _sf=scene.getObjectByName("__shadowFloor__"); if(_sf && shelfGroup){ setTimeout(function(){ if(!shelfGroup || !_sf) return; shelfGroup.updateMatrixWorld(true); const _bb=new THREE.Box3().setFromObject(shelfGroup); const _center=new THREE.Vector3(); _bb.getCenter(_center); const _floorY = _bb.min.y - 0.02; _sf.position.y = _floorY; const _bs=scene.getObjectByName('__blobShadow__'); if(_bs){ const _bw=(_bb.max.x-_bb.min.x)*2.4; const _bdp=(_bb.max.z-_bb.min.z)*2.2; _bs.scale.set(_bw,_bdp,1); _bs.position.x=_center.x; _bs.position.z=_center.z; _bs.position.y=_floorY-0.01; } if(_dbgDir1){ _dbgDir1.target.position.copy(_center); _dbgDir1.target.updateMatrixWorld(); } console.log("[SHADOW] floor Y=", _floorY, "center=", _center); },300); }
                     
                     const assemblyStartTime = ">+0.1";
                     const dropDuration = 0.5;
@@ -1789,7 +1789,7 @@ function fitCameraToShelf() {
                         else                      gsap.set(c.position, { x: f.x,      y: f.y + 16,  z: f.z });
                     });
 
-                    scene.add(shelfGroup); shelfGroup.traverse(function(_m){ if(_m.isMesh){ _m.castShadow=true; _m.receiveShadow=true; } }); const _sf=scene.getObjectByName("__shadowFloor__"); if(_sf && shelfGroup){ setTimeout(function(){ if(!shelfGroup || !_sf) return; shelfGroup.updateMatrixWorld(true); const _bb=new THREE.Box3().setFromObject(shelfGroup); const _center=new THREE.Vector3(); _bb.getCenter(_center); const _floorY = _bb.min.y - 0.02; _sf.position.y = _floorY; const _bs=scene.getObjectByName('__blobShadow__'); if(_bs){ const _bw=(_bb.max.x-_bb.min.x)*1.6; const _bdp=(_bb.max.z-_bb.min.z)*1.4; _bs.scale.set(_bw,_bdp,1); _bs.position.x=_center.x; _bs.position.z=_center.z; _bs.position.y=_floorY-0.01; } if(_dbgDir1){ _dbgDir1.target.position.copy(_center); _dbgDir1.target.updateMatrixWorld(); } console.log("[SHADOW] floor Y=", _floorY, "center=", _center); },300); }
+                    scene.add(shelfGroup); shelfGroup.traverse(function(_m){ if(_m.isMesh){ _m.castShadow=true; _m.receiveShadow=true; } }); const _sf=scene.getObjectByName("__shadowFloor__"); if(_sf && shelfGroup){ setTimeout(function(){ if(!shelfGroup || !_sf) return; shelfGroup.updateMatrixWorld(true); const _bb=new THREE.Box3().setFromObject(shelfGroup); const _center=new THREE.Vector3(); _bb.getCenter(_center); const _floorY = _bb.min.y - 0.02; _sf.position.y = _floorY; const _bs=scene.getObjectByName('__blobShadow__'); if(_bs){ const _bw=(_bb.max.x-_bb.min.x)*2.4; const _bdp=(_bb.max.z-_bb.min.z)*2.2; _bs.scale.set(_bw,_bdp,1); _bs.position.x=_center.x; _bs.position.z=_center.z; _bs.position.y=_floorY-0.01; } if(_dbgDir1){ _dbgDir1.target.position.copy(_center); _dbgDir1.target.updateMatrixWorld(); } console.log("[SHADOW] floor Y=", _floorY, "center=", _center); },300); }
 
                     const startAt = ">+0.1";
                     const springEase = 'back.out(1.5)';
@@ -1847,7 +1847,7 @@ function fitCameraToShelf() {
                     const _mobOff = 0;
                     shelfGroup.position.y = _mobOff;
                     shelfGroup.scale.set(1.1, 1.1, 1.1);
-                    scene.add(shelfGroup); shelfGroup.traverse(function(_m){ if(_m.isMesh){ _m.castShadow=true; _m.receiveShadow=true; } }); const _sf=scene.getObjectByName("__shadowFloor__"); if(_sf && shelfGroup){ setTimeout(function(){ if(!shelfGroup || !_sf) return; shelfGroup.updateMatrixWorld(true); const _bb=new THREE.Box3().setFromObject(shelfGroup); const _center=new THREE.Vector3(); _bb.getCenter(_center); const _floorY = _bb.min.y - 0.02; _sf.position.y = _floorY; const _bs=scene.getObjectByName('__blobShadow__'); if(_bs){ const _bw=(_bb.max.x-_bb.min.x)*1.6; const _bdp=(_bb.max.z-_bb.min.z)*1.4; _bs.scale.set(_bw,_bdp,1); _bs.position.x=_center.x; _bs.position.z=_center.z; _bs.position.y=_floorY-0.01; } if(_dbgDir1){ _dbgDir1.target.position.copy(_center); _dbgDir1.target.updateMatrixWorld(); } console.log("[SHADOW] floor Y=", _floorY, "center=", _center); },300); }
+                    scene.add(shelfGroup); shelfGroup.traverse(function(_m){ if(_m.isMesh){ _m.castShadow=true; _m.receiveShadow=true; } }); const _sf=scene.getObjectByName("__shadowFloor__"); if(_sf && shelfGroup){ setTimeout(function(){ if(!shelfGroup || !_sf) return; shelfGroup.updateMatrixWorld(true); const _bb=new THREE.Box3().setFromObject(shelfGroup); const _center=new THREE.Vector3(); _bb.getCenter(_center); const _floorY = _bb.min.y - 0.02; _sf.position.y = _floorY; const _bs=scene.getObjectByName('__blobShadow__'); if(_bs){ const _bw=(_bb.max.x-_bb.min.x)*2.4; const _bdp=(_bb.max.z-_bb.min.z)*2.2; _bs.scale.set(_bw,_bdp,1); _bs.position.x=_center.x; _bs.position.z=_center.z; _bs.position.y=_floorY-0.01; } if(_dbgDir1){ _dbgDir1.target.position.copy(_center); _dbgDir1.target.updateMatrixWorld(); } console.log("[SHADOW] floor Y=", _floorY, "center=", _center); },300); }
                     const assemblyStartTime = ">+0.1";
                     const dropDuration = 0.55;
                     if (bottomPanel) { masterTimeline.to(bottomPanel.position, { y: finalPositions.get("bottomPanel").y, duration: dropDuration, ease: 'back.out(1.25)' }, assemblyStartTime); }
@@ -5918,10 +5918,10 @@ function enterDragMode() {
     if (shelfGroup) shelfGroup.position.y = 0;
 
     if (camera && controls) {
-        const camZ = editHeight >= 80 ? 8 : editHeight >= 60 ? 7 : 6;
+        const camZ = editHeight >= 80 ? 12 : editHeight >= 60 ? 11 : 9;
         controls.target.set(0, 0, 0);
         gsap.to(camera.position, {
-            x: -3, y: 0.5, z: camZ,
+            x: -2.2, y: 1.0, z: camZ,
             duration: 0.5, ease: 'power2.inOut',
             onUpdate: function() { if (controls) controls.update(); }
         });
@@ -6082,8 +6082,8 @@ function exitDragMode() {
     // Przywroc kamerę — model jest przy y=0, kamera patrzy na (0,0,0)
     if (camera && controls) {
         const _hExit = parseInt(heightSelect && heightSelect.value) || 60;
-        const _czExit = window.innerWidth < 768 ? (_hExit >= 80 ? 11 : 9) : (_hExit >= 80 ? 10 : 7);
-        gsap.to(camera.position, { x: -4, y: 0.5, z: _czExit, duration: 0.5, ease: 'power2.inOut', onUpdate: function() { if (controls) controls.update(); } });
+        const _czExit = window.innerWidth < 768 ? (_hExit >= 80 ? 17 : 14) : (_hExit >= 80 ? 15 : 11);
+        gsap.to(camera.position, { x: -2.8, y: 1.0, z: _czExit, duration: 0.5, ease: 'power2.inOut', onUpdate: function() { if (controls) controls.update(); } });
         controls.target.set(0, 0, 0);
         controls.update();
     }
