@@ -849,30 +849,53 @@ function updateModularIconActiveStates() {
         const _shelf3dTextures = {};   // cache załadowanych tekstur
         let   _shelf3dTexReady = false; // czy tekstury są załadowane
 
-        // Mapa kolor → ścieżka tekstury
+        // Mapa kolor → ścieżki tekstur
         const SHELF3D_COLOR_TEXTURE = {
-            '#8B5A2B': 'tekstura/dab.jpg',    // Dąb Craft Złoty
-            '#FFFFFF':  null,                  // Biały matowy — kolor
-            '#000000':  null,                  // Czarny matowy — kolor
+            '#8B5A2B': {
+                horiz:    'tekstura/dab.jpg',
+                vert:     'tekstura/dab_vert.jpg',
+                normalH:  'tekstura/dab_normal.jpg',
+                normalV:  'tekstura/dab_normal_vert.jpg',
+                roughH:   'tekstura/dab_roughness.jpg',
+                roughV:   'tekstura/dab_roughness_vert.jpg',
+            },
+            '#FFFFFF':  null,
+            '#000000':  null,
         };
 
         // Tekstura krawędzi wspólna dla wszystkich kolorów drewna
         const SHELF3D_EDGE_TEX_PATH = 'tekstura/brzeg_poz_512.jpg';
         const SHELF3D_ENV_PATH      = 'tekstura/env-neon_photostudio_custom_bw_2k.jpg';
 
-        // Skala powtarzania tekstury: 1 powtórzenie = SCALE jednostek Three.js (1 j. = 10 cm)
-        // SHELF3D_SCALE = 1.5 → jedno powtórzenie co ~15 cm — wyraźne słoje dębu
-        const SHELF3D_SCALE = 1.5;  // ~15 cm na jedno powtórzenie (dostosuj w razie potrzeby)
+        // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
+        // SHELF3D_SCALE = 3.0 → jedno powtórzenie co ~30 cm — duże wyraźne słoje jak w referencji
+        const SHELF3D_SCALE = 3.0;
 
-        function shelf3dInitTextures(scene) {
+        function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
 
-            // Załaduj mapę środowiskową (oświetlenie + odbicia)
+            // Załaduj mapę środowiskową z PMREM (wymagane dla MeshPhysicalMaterial)
             loader.load(SHELF3D_ENV_PATH, (envTex) => {
                 envTex.mapping = THREE.EquirectangularReflectionMapping;
                 envTex.encoding = THREE.sRGBEncoding;
-                scene.environment = envTex;
-                _shelf3dTextures['__env__'] = envTex;
+                if (_renderer && THREE.PMREMGenerator) {
+                    try {
+                        const pmrem = new THREE.PMREMGenerator(_renderer);
+                        pmrem.compileEquirectangularShader();
+                        const envRT = pmrem.fromEquirectangular(envTex);
+                        scene.environment = envRT.texture;
+                        envTex.dispose();
+                        pmrem.dispose();
+                        _shelf3dTextures['__env__'] = envRT.texture;
+                    } catch(e) {
+                        // fallback: bez PMREM
+                        scene.environment = envTex;
+                        _shelf3dTextures['__env__'] = envTex;
+                    }
+                } else {
+                    scene.environment = envTex;
+                    _shelf3dTextures['__env__'] = envTex;
+                }
             });
 
             // Załaduj teksturę krawędzi
@@ -882,9 +905,9 @@ function updateModularIconActiveStates() {
                 _shelf3dTextures['__edge__'] = tex;
             });
 
-            // Załaduj wszystkie tekstury powierzchniowe
-            const uniquePaths = [...new Set(Object.values(SHELF3D_COLOR_TEXTURE).filter(Boolean))];
-            uniquePaths.forEach(path => {
+            // Załaduj wszystkie tekstury powierzchniowe (horiz + vert warianty)
+            const _loadTex = (path) => {
+                if (!path || _shelf3dTextures[path]) return;
                 loader.load(
                     path,
                     (tex) => {
@@ -893,34 +916,41 @@ function updateModularIconActiveStates() {
                         tex.needsUpdate = true;
                         _shelf3dTextures[path] = tex;
                         _shelf3dTexReady = true;
-                        console.log('[SHELF3D] Tekstura załadowana:', path);
                         shelf3dUpdateFactory();
-                        // Odśwież materiały — z retry co 500ms aż shelfGroup będzie gotowy
                         const _tryApply = (attempts) => {
-                            if (shelfGroup) {
-                                shelf3dReapplyMaterials();
-                            } else if (attempts > 0) {
-                                setTimeout(() => _tryApply(attempts - 1), 500);
-                            }
+                            if (shelfGroup) { shelf3dReapplyMaterials(); }
+                            else if (attempts > 0) { setTimeout(() => _tryApply(attempts - 1), 500); }
                         };
-                        _tryApply(8); // próbuj przez 4 sekundy
+                        _tryApply(8);
                     },
                     undefined,
-                    (err) => {
-                        console.error('[SHELF3D] BŁĄD ładowania tekstury:', path, err);
-                    }
+                    (err) => { console.error('[SHELF3D] BŁĄD ładowania:', path, err); }
                 );
+            };
+            Object.values(SHELF3D_COLOR_TEXTURE).filter(Boolean).forEach(entry => {
+                if (typeof entry === 'object') {
+                    _loadTex(entry.horiz);   _loadTex(entry.vert);
+                    _loadTex(entry.normalH); _loadTex(entry.normalV);
+                    _loadTex(entry.roughH);  _loadTex(entry.roughV);
+                } else { _loadTex(entry); }
             });
 
             // Ustaw fabrykę od razu (na wypadek braku tekstur)
             shelf3dUpdateFactory();
         }
 
-        function shelf3dGetTexForColor(colorVal) {
-            const path = SHELF3D_COLOR_TEXTURE[colorVal ? colorVal.toUpperCase() : '']
-                      || SHELF3D_COLOR_TEXTURE[colorVal];
-            if (!path) return null;
-            return _shelf3dTextures[path] || null;
+        function shelf3dGetTexEntry(colorVal, forSide) {
+            const entry = SHELF3D_COLOR_TEXTURE[colorVal ? colorVal.toUpperCase() : '']
+                       || SHELF3D_COLOR_TEXTURE[colorVal];
+            if (!entry) return { diffuse: null, normal: null, rough: null };
+            if (typeof entry === 'object') {
+                return {
+                    diffuse: _shelf3dTextures[forSide ? entry.vert    : entry.horiz]   || null,
+                    normal:  _shelf3dTextures[forSide ? entry.normalV : entry.normalH] || null,
+                    rough:   _shelf3dTextures[forSide ? entry.roughV  : entry.roughH]  || null,
+                };
+            }
+            return { diffuse: _shelf3dTextures[entry] || null, normal: null, rough: null };
         }
 
         function shelf3dMakeMaterialForBoard(type, w, h, d) {
@@ -929,39 +959,42 @@ function updateModularIconActiveStates() {
                 ? (sideColorSelect  ? sideColorSelect.value  : '')
                 : (shelfColorSelect ? shelfColorSelect.value : '');
 
-            const faceTex = shelf3dGetTexForColor(colorVal);
-
-            const roughness = 0.80;
-            const metalness = 0.0;
-            const envMapIntensity = 0.5;
+            const { diffuse: faceTex, normal: normTex, rough: roughTex } = shelf3dGetTexEntry(colorVal, isSide);
 
             if (!faceTex) {
-                // Brak tekstury → kolor jednolity
                 const col = (colorVal && colorVal !== '') ? colorVal : '#8B7355';
-                return new THREE.MeshStandardMaterial({ color: col, roughness, metalness, envMapIntensity });
+                return new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.8, metalness: 0, envMapIntensity: 0.8 });
             }
 
-            // Klonuj teksturę żeby ustawić osobne repeat dla każdej deski
-            const fClone = faceTex.clone();
-            fClone.wrapS = fClone.wrapT = THREE.RepeatWrapping;
-            fClone.encoding = THREE.sRGBEncoding;
-            fClone.needsUpdate = true;
+            // Klonuj tekstury i ustaw repeat
+            const _cloneTex = (src, isSRGB) => {
+                if (!src) return null;
+                const c = src.clone();
+                c.wrapS = c.wrapT = THREE.RepeatWrapping;
+                if (isSRGB) c.encoding = THREE.sRGBEncoding;
+                c.needsUpdate = true;
+                if (isSide) {
+                    c.repeat.set(h / SHELF3D_SCALE, d / SHELF3D_SCALE);
+                } else {
+                    c.repeat.set(w / SHELF3D_SCALE, d / SHELF3D_SCALE);
+                }
+                return c;
+            };
 
-            if (isSide) {
-                // Deska pionowa BoxGeometry(thickness, H, D)
-                // Twarz +X/-X: UV u→Z(depth), v→Y(height)
-                fClone.repeat.set(d / SHELF3D_SCALE, h / SHELF3D_SCALE);
-            } else {
-                // Deska pozioma BoxGeometry(W, thickness, D)
-                // Twarz +Y/-Y: UV u→X(width), v→Z(depth)
-                fClone.repeat.set(w / SHELF3D_SCALE, d / SHELF3D_SCALE);
-            }
+            const fClone = _cloneTex(faceTex, true);
+            const nClone = _cloneTex(normTex, false);
+            const rClone = _cloneTex(roughTex, false);
 
-            return new THREE.MeshStandardMaterial({
-                map: fClone,
-                roughness,
-                metalness,
-                envMapIntensity,
+            // MeshPhysicalMaterial — jak sklep-meble.pl
+            return new THREE.MeshPhysicalMaterial({
+                map:          fClone,
+                normalMap:    nClone || undefined,
+                normalScale:  nClone ? new THREE.Vector2(0.8, 0.8) : undefined,
+                roughnessMap: rClone || undefined,
+                roughness:    0.75,
+                metalness:    0.0,
+                envMapIntensity: 1.0,
+                reflectivity: 0.2,
             });
         }
 
@@ -1018,7 +1051,7 @@ function updateModularIconActiveStates() {
             });
         }
 
-        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xf0f0f0); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.65; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.6)); const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); directionalLight.position.set(5, 10, 6); scene.add(directionalLight); const directionalLight2 = new THREE.DirectionalLight(0xfff0d0, 0.25); directionalLight2.position.set(-3, 3, -2); scene.add(directionalLight2); shelf3dInitTextures(scene); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xf0f0f0); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.85; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.6)); const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); directionalLight.position.set(5, 10, 6); scene.add(directionalLight); const directionalLight2 = new THREE.DirectionalLight(0xfff0d0, 0.25); directionalLight2.position.set(-3, 3, -2); scene.add(directionalLight2); shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
