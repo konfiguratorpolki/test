@@ -869,11 +869,12 @@ function updateModularIconActiveStates() {
         const SHELF3D_ENV_PATH      = 'tekstura/env-neon_photostudio_custom_bw_2k.jpg';
 
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
-        // Wyższa wartość = większy wzór drewna (mniej powtórzeń)
-        let SHELF3D_SCALE_HORIZ = 4.0;  // półki poziome
-        let SHELF3D_SCALE_SIDE  = 4.0;  // boki i pionowe elementy
-        // alias dla wstecznej kompatybilności z panelem
-        let SHELF3D_SCALE = 4.0;
+        // Wyższa wartość = większy wzór drewna (mniej powtórzeń na planszy)
+        // Zmniejszono z 7.0 → 3.5 aby słoje były widoczne przy normalnym oddaleniu kamery
+        let SHELF3D_SCALE_HORIZ = 3.5;  // półki poziome
+        let SHELF3D_SCALE_SIDE  = 3.5;  // boki i pionowe elementy
+        // alias dla wstecznej kompatybilności
+        let SHELF3D_SCALE = 3.5;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -998,7 +999,7 @@ function updateModularIconActiveStates() {
             return new THREE.MeshPhysicalMaterial({
                 map:          fClone,
                 normalMap:    nClone || undefined,
-                normalScale:  nClone ? new THREE.Vector2(0.6, 0.6) : undefined,
+                normalScale:  nClone ? new THREE.Vector2(1.0, 1.0) : undefined,
                 roughnessMap: rClone || undefined,
                 roughness:    0.68,
                 metalness:    0.0,
@@ -1069,8 +1070,8 @@ function updateModularIconActiveStates() {
             if (!renderer || !scene || !_dbgHemi || !_dbgDir1 || !_dbgDir2) return;
             const cfg = {
                 exposure:    renderer.toneMappingExposure,
-                scaleH:      SHELF3D_SCALE_HORIZ,
-                scaleV:      SHELF3D_SCALE_SIDE,
+                scaleH:      SHELF3D_SCALE_HORIZ || 7.0,
+                scaleV:      SHELF3D_SCALE_SIDE  || 7.0,
                 hemiInt:     _dbgHemi.intensity,
                 dir1Int:     _dbgDir1.intensity,
                 dir2Int:     _dbgDir2.intensity,
@@ -1110,15 +1111,22 @@ function updateModularIconActiveStates() {
                 inp.addEventListener('input',()=>{ cfg[key]=parseFloat(inp.value); vel.textContent=cfg[key].toFixed(2); cb(cfg[key]); updateCode(); });
                 w.appendChild(top); w.appendChild(inp); return w;
             }
-            function rebuildMats() { if(typeof updatePreview==='function') updatePreview(true); }
+            function rebuildMats() {
+                // Bezpośrednio przebuduj materiały bez przebudowy geometrii
+                if (typeof shelf3dReapplyMaterials === 'function') {
+                    shelf3dReapplyMaterials();
+                } else if (typeof updatePreview === 'function') {
+                    updatePreview(true);
+                }
+            }
             // === Ekspozycja ===
             panel.appendChild(sec('🔆 Ekspozycja (jasność całości)'));
             panel.appendChild(row('Jasność sceny','exposure',0.3,1.5,0.01, v=>{ renderer.toneMappingExposure=v; }));
             // === Tekstura ===
             panel.appendChild(sec('🌲 Słoje — elementy POZIOME (półki)'));
-            panel.appendChild(row('Rozmiar wzoru ← mały | duży →','scaleH',1.0,8.0,0.1, v=>{ SHELF3D_SCALE_HORIZ=v; SHELF3D_SCALE=v; rebuildMats(); }));
+            panel.appendChild(row('Rozmiar wzoru ← mały | duży →','scaleH',1.0,15.0,0.5, v=>{ SHELF3D_SCALE_HORIZ=v; SHELF3D_SCALE=v; rebuildMats(); }));
             panel.appendChild(sec('🪵 Słoje — elementy PIONOWE (boki)'));
-            panel.appendChild(row('Rozmiar wzoru ← mały | duży →','scaleV',1.0,8.0,0.1, v=>{ SHELF3D_SCALE_SIDE=v; rebuildMats(); }));
+            panel.appendChild(row('Rozmiar wzoru ← mały | duży →','scaleV',1.0,15.0,0.5, v=>{ SHELF3D_SCALE_SIDE=v; rebuildMats(); }));
             // === Oświetlenie ===
             panel.appendChild(sec('💡 Oświetlenie'));
             panel.appendChild(row('Światło ogólne (hemisphere)','hemiInt',0,1.5,0.01, v=>{ _dbgHemi.intensity=v; }));
