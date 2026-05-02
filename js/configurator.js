@@ -877,18 +877,18 @@ function updateModularIconActiveStates() {
         // Parametry materiału — dopasowane do wyglądu prawdziwej półki
         // SHELF3D_MAT_COLOR inicjalizowany leniwie (THREE może nie być gotowe przy deklaracji)
         let SHELF3D_MAT_COLOR       = null; // THREE.Color — init w makeMaterial
-        let SHELF3D_MAT_COLOR_R     = 0.55;
-        let SHELF3D_MAT_COLOR_G     = 0.47;
-        let SHELF3D_MAT_COLOR_B     = 0.38;
-        let SHELF3D_MAT_ROUGHNESS   = 0.68;
+        let SHELF3D_MAT_COLOR_R     = 0.48;
+        let SHELF3D_MAT_COLOR_G     = 0.40;
+        let SHELF3D_MAT_COLOR_B     = 0.29;
+        let SHELF3D_MAT_ROUGHNESS   = 0.65;
         let SHELF3D_MAT_NORMAL      = 0.60;
         let SHELF3D_MAT_ENV         = 0.70;
-        let SHELF3D_MAT_CLEARCOAT   = 0.22;
+        let SHELF3D_MAT_CLEARCOAT   = 0.28;
         let SHELF3D_MAT_CC_ROUGH    = 0.35;
         // sheen w Three.js r128 = Color (nie float jak w r139+); sheenColor/sheenRoughness nie istnieją w r128
         let SHELF3D_MAT_SHEEN_ON    = true;  // czy włączyć sheen
         let SHELF3D_CANVAS_CONTRAST = 1.15;
-        let SHELF3D_CANVAS_SAT      = 0.92;
+        let SHELF3D_CANVAS_SAT      = 0.88;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
