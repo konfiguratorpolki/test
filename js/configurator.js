@@ -870,21 +870,21 @@ function updateModularIconActiveStates() {
 
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
         // Wyższa wartość = większy wzór drewna (mniej powtórzeń na planszy)
-        let SHELF3D_SCALE_HORIZ = 11.0;  // półki poziome
-        let SHELF3D_SCALE_SIDE  = 11.0;  // boki i pionowe elementy
+        let SHELF3D_SCALE_HORIZ = 11.0;
+        let SHELF3D_SCALE_SIDE  = 11.0;
         let SHELF3D_SCALE = 11.0;
 
-        // Parametry materiału drewna — dopasowane do wyglądu prawdziwej półki
-        let SHELF3D_MAT_COLOR       = new THREE.Color(0.72, 0.58, 0.43); // przyciemnienie+ocieplenie tekstury
+        // Parametry materiału — dopasowane do wyglądu prawdziwej półki
+        let SHELF3D_MAT_COLOR       = new THREE.Color(0.72, 0.58, 0.43);
         let SHELF3D_MAT_ROUGHNESS   = 0.68;
         let SHELF3D_MAT_NORMAL      = 0.60;
         let SHELF3D_MAT_ENV         = 0.70;
-        let SHELF3D_MAT_CLEARCOAT   = 0.22;   // warstwa lakieru
-        let SHELF3D_MAT_CC_ROUGH    = 0.35;   // matowość lakieru
-        let SHELF3D_MAT_SHEEN       = 0.18;   // aksamit włókien drewna
+        let SHELF3D_MAT_CLEARCOAT   = 0.22;
+        let SHELF3D_MAT_CC_ROUGH    = 0.35;
+        let SHELF3D_MAT_SHEEN       = 0.18;
         let SHELF3D_MAT_SHEEN_ROUGH = 0.75;
-        let SHELF3D_CANVAS_CONTRAST = 1.12;   // kontrast CSS na canvas
-        let SHELF3D_CANVAS_SAT      = 1.18;   // nasycenie CSS na canvas
+        let SHELF3D_CANVAS_CONTRAST = 1.12;
+        let SHELF3D_CANVAS_SAT      = 1.18;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -1007,20 +1007,20 @@ function updateModularIconActiveStates() {
 
             // MeshPhysicalMaterial z clearcoat i sheen dla realistycznego drewna
             return new THREE.MeshPhysicalMaterial({
-                map:              fClone,
-                color:            SHELF3D_MAT_COLOR.clone(),
-                normalMap:        nClone || undefined,
-                normalScale:      nClone ? new THREE.Vector2(SHELF3D_MAT_NORMAL, SHELF3D_MAT_NORMAL) : undefined,
-                roughnessMap:     rClone || undefined,
-                roughness:        SHELF3D_MAT_ROUGHNESS,
-                metalness:        0.0,
-                envMapIntensity:  SHELF3D_MAT_ENV,
-                reflectivity:     0.05,
-                clearcoat:        SHELF3D_MAT_CLEARCOAT,
+                map:                fClone,
+                color:              SHELF3D_MAT_COLOR.clone(),
+                normalMap:          nClone || undefined,
+                normalScale:        nClone ? new THREE.Vector2(SHELF3D_MAT_NORMAL, SHELF3D_MAT_NORMAL) : undefined,
+                roughnessMap:       rClone || undefined,
+                roughness:          SHELF3D_MAT_ROUGHNESS,
+                metalness:          0.0,
+                envMapIntensity:    SHELF3D_MAT_ENV,
+                reflectivity:       0.05,
+                clearcoat:          SHELF3D_MAT_CLEARCOAT,
                 clearcoatRoughness: SHELF3D_MAT_CC_ROUGH,
-                sheen:            SHELF3D_MAT_SHEEN,
-                sheenRoughness:   SHELF3D_MAT_SHEEN_ROUGH,
-                sheenColor:       new THREE.Color(0.75, 0.50, 0.25),
+                sheen:              SHELF3D_MAT_SHEEN,
+                sheenRoughness:     SHELF3D_MAT_SHEEN_ROUGH,
+                sheenColor:         new THREE.Color(0.75, 0.50, 0.25),
             });
         }
 
@@ -1077,7 +1077,7 @@ function updateModularIconActiveStates() {
             });
         }
 
-        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfff5e8, 0x8899aa, 0.30); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8f0, 1.8); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 3; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xddeeff, 0.25); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.35, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); renderer.domElement.style.filter = 'contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+')'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfff5e8, 0x8899aa, 0.30); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8f0, 1.8); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 3; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xddeeff, 0.25); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.35, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+')'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
@@ -1155,14 +1155,14 @@ function updateModularIconActiveStates() {
             panel.appendChild(row('Światło ogólne (hemisphere)','hemiInt',0,1.5,0.01, v=>{ _dbgHemi.intensity=v; }));
             panel.appendChild(row('Światło główne (przód-góra)','dir1Int',0,2,0.01, v=>{ _dbgDir1.intensity=v; }));
             panel.appendChild(row('Światło boczne (tył)','dir2Int',0,1,0.01, v=>{ _dbgDir2.intensity=v; }));
-            // === Kolor ===
+            // === Kolor drewna ===
             function applyFilter(){ renderer.domElement.style.filter='contrast('+cfg.contrast+') saturate('+cfg.saturation+')'; }
             function applyColor(){ const c=new THREE.Color(cfg.colorDark,cfg.colorWarm,cfg.colorDark*0.60); SHELF3D_MAT_COLOR=c; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.color.set(c);o.material.needsUpdate=true;} }); }
             panel.appendChild(sec('🎨 Kolor drewna'));
             panel.appendChild(row('Jasność koloru (ciemniej←)','colorDark',0.3,1.0,0.01, v=>{ applyColor(); }));
             panel.appendChild(row('Ciepłota (zimno←→ciepło)','colorWarm',0.3,0.9,0.01, v=>{ applyColor(); }));
-            // === Lakier / Sheen ===
-            panel.appendChild(sec('✨ Lakier i aksamit'));
+            // === Lakier ===
+            panel.appendChild(sec('✨ Lakier i aksamit (sheen)'));
             panel.appendChild(row('Clearcoat — warstwa lakieru','clearcoat',0,1,0.01, v=>{ SHELF3D_MAT_CLEARCOAT=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoat=v;o.material.needsUpdate=true;} }); }));
             panel.appendChild(row('Matowość lakieru','ccRough',0,1,0.01, v=>{ SHELF3D_MAT_CC_ROUGH=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoatRoughness=v;o.material.needsUpdate=true;} }); }));
             panel.appendChild(row('Sheen — aksamit włókien','sheen',0,1,0.01, v=>{ SHELF3D_MAT_SHEEN=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.sheen!==undefined){o.material.sheen=v;o.material.needsUpdate=true;} }); }));
@@ -1185,26 +1185,19 @@ function updateModularIconActiveStates() {
             document.body.appendChild(panel);
             function updateCode() {
                 cp.textContent=
-'// === Skala tekstury ===\n'+
-'let SHELF3D_SCALE_HORIZ = '+cfg.scaleH.toFixed(1)+';\n'+
+'// Skala tekstury\nlet SHELF3D_SCALE_HORIZ = '+cfg.scaleH.toFixed(1)+';\n'+
 'let SHELF3D_SCALE_SIDE  = '+cfg.scaleV.toFixed(1)+';\n\n'+
-'// === Kolor drewna ===\n'+
-'let SHELF3D_MAT_COLOR = new THREE.Color('+cfg.colorDark.toFixed(2)+','+cfg.colorWarm.toFixed(2)+','+(cfg.colorDark*0.60).toFixed(2)+');\n\n'+
-'// === Materiał ===\n'+
-'let SHELF3D_MAT_ROUGHNESS = '+cfg.roughness.toFixed(2)+';\n'+
+'// Kolor drewna\nlet SHELF3D_MAT_COLOR = new THREE.Color('+cfg.colorDark.toFixed(2)+','+cfg.colorWarm.toFixed(2)+','+(cfg.colorDark*0.60).toFixed(2)+');\n\n'+
+'// Materiał\nlet SHELF3D_MAT_ROUGHNESS = '+cfg.roughness.toFixed(2)+';\n'+
 'let SHELF3D_MAT_NORMAL    = '+cfg.normalScale.toFixed(2)+';\n'+
 'let SHELF3D_MAT_ENV       = '+cfg.envInt.toFixed(2)+';\n'+
 'let SHELF3D_MAT_CLEARCOAT = '+cfg.clearcoat.toFixed(2)+';\n'+
 'let SHELF3D_MAT_CC_ROUGH  = '+cfg.ccRough.toFixed(2)+';\n'+
 'let SHELF3D_MAT_SHEEN     = '+cfg.sheen.toFixed(2)+';\n\n'+
-'// === Obraz ===\n'+
-'renderer.toneMappingExposure = '+cfg.exposure.toFixed(2)+';\n'+
+'// Obraz\nrenderer.toneMappingExposure = '+cfg.exposure.toFixed(2)+';\n'+
 'let SHELF3D_CANVAS_CONTRAST = '+cfg.contrast.toFixed(2)+';\n'+
 'let SHELF3D_CANVAS_SAT      = '+cfg.saturation.toFixed(2)+';\n\n'+
-'// === Oświetlenie ===\n'+
-'HemisphereLight intensity: '+cfg.hemiInt.toFixed(2)+';\n'+
-'DirectionalLight główne:   '+cfg.dir1Int.toFixed(2)+';\n'+
-'DirectionalLight boczne:   '+cfg.dir2Int.toFixed(2)+';';
+'// Oświetlenie\nHemisphere: '+cfg.hemiInt.toFixed(2)+'; Główne: '+cfg.dir1Int.toFixed(2)+'; Boczne: '+cfg.dir2Int.toFixed(2)+';';
             }
             updateCode();
             function toggle(){ panel.style.display=panel.style.display==='none'?'block':'none'; }
@@ -7760,4 +7753,74 @@ function addShelfDimensionArrows(group, internalShelves, bottomPanel, topPanel, 
         const canvas = renderer && renderer.domElement;
         if (!canvas) { setTimeout(attachDesktopPan, 500); return; }
         // capture phase = przed OrbitControls
-        canvas.addEventListener('
+        canvas.addEventListener('pointerdown', onPointerDown, true);
+        canvas.addEventListener('pointermove', onPointerMove, true);
+        canvas.addEventListener('pointerup', onPointerUp, true);
+        canvas.addEventListener('pointercancel', onPointerUp, true);
+    }
+    window.addEventListener('load', () => setTimeout(attachDesktopPan, 800));
+})();
+
+// ---- MOBILE: pionowy swipe = obniżanie/podwyższanie półki ----
+(function() {
+    let _vt0 = null;    // startY dotyku
+    let _vy0 = null;    // startowa pozycja shelfGroup.position.y
+    let _isVertical = null; // null=nie ustalono, true=pionowy, false=poziomy (OrbitControls)
+    const LOCK_THRESHOLD = 8; // px — po przekroczeniu blokujemy kierunek
+
+    function onTouchStart(e) {
+        if (window.innerWidth >= 768) return;
+        if (!shelfGroup || dragModeActive) return;
+        if (e.touches.length !== 1) return;
+        _vt0 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        _vy0 = shelfGroup.position.y;
+        _isVertical = null;
+    }
+
+    function onTouchMove(e) {
+        if (window.innerWidth >= 768) return;
+        if (!shelfGroup || dragModeActive) return;
+        if (e.touches.length !== 1 || _vt0 === null) return;
+
+        const dx = e.touches[0].clientX - _vt0.x;
+        const dy = e.touches[0].clientY - _vt0.y;
+
+        // Ustal kierunek po przekroczeniu progu
+        if (_isVertical === null) {
+            if (Math.abs(dx) > LOCK_THRESHOLD || Math.abs(dy) > LOCK_THRESHOLD) {
+                _isVertical = Math.abs(dy) > Math.abs(dx);
+            }
+            return;
+        }
+
+        if (!_isVertical) return; // poziomy — oddaj OrbitControls
+
+        e.preventDefault(); // blokuj scroll przeglądarki
+        e.stopPropagation();
+
+        // Przelicz piksele na jednostki 3D — 1px ≈ 0.015 jednostki przy obecnym zoom
+        const canvasH = renderer ? renderer.domElement.clientHeight : 400;
+        const sensitivity = 12 / canvasH; // 12 jednostek na pełną wysokość canvasa
+        const _shelfH = (heightSelect ? parseFloat(heightSelect.value) || 60 : 60) / 10;
+        const _dragLimit = _shelfH * 0.55;
+        shelfGroup.position.y = Math.max(-_dragLimit, Math.min(_dragLimit, _vy0 - dy * sensitivity));
+    }
+
+    function onTouchEnd() {
+        _vt0 = null;
+        _vy0 = null;
+        _isVertical = null;
+    }
+
+    // Podepnij po inicjalizacji renderera
+    function attachVerticalTouch() {
+        const canvas = renderer && renderer.domElement;
+        if (!canvas) { setTimeout(attachVerticalTouch, 500); return; }
+        // capture phase = przed OrbitControls
+        canvas.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+        canvas.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
+        canvas.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
+    }
+    // Czekaj na init3D
+    window.addEventListener('load', () => setTimeout(attachVerticalTouch, 800));
+})();
