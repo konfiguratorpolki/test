@@ -869,8 +869,11 @@ function updateModularIconActiveStates() {
         const SHELF3D_ENV_PATH      = 'tekstura/env-neon_photostudio_custom_bw_2k.jpg';
 
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
-        // SHELF3D_SCALE = 2.5 → jedno powtórzenie co ~25 cm — wyraźne słoje widoczne z dystansu
-        let SHELF3D_SCALE = 2.5;
+        // Wyższa wartość = większy wzór drewna (mniej powtórzeń)
+        let SHELF3D_SCALE_HORIZ = 4.0;  // półki poziome
+        let SHELF3D_SCALE_SIDE  = 4.0;  // boki i pionowe elementy
+        // alias dla wstecznej kompatybilności z panelem
+        let SHELF3D_SCALE = 4.0;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -945,13 +948,11 @@ function updateModularIconActiveStates() {
                        || SHELF3D_COLOR_TEXTURE[colorVal];
             if (!entry) return { diffuse: null, normal: null, rough: null, rotated: false };
             if (typeof entry === 'object') {
-                // Zawsze używamy poziomej tekstury — obrót o 90° robimy programowo w _cloneTex
-                // dzięki czemu obie płyty mają identyczny kolor i kontrast
                 return {
-                    diffuse: _shelf3dTextures[entry.horiz]   || null,
-                    normal:  _shelf3dTextures[entry.normalH] || null,
-                    rough:   _shelf3dTextures[entry.roughH]  || null,
-                    rotated: forSide,
+                    diffuse: _shelf3dTextures[forSide ? entry.vert    : entry.horiz]   || null,
+                    normal:  _shelf3dTextures[forSide ? entry.normalV : entry.normalH] || null,
+                    rough:   _shelf3dTextures[forSide ? entry.roughV  : entry.roughH]  || null,
+                    rotated: false,
                 };
             }
             return { diffuse: _shelf3dTextures[entry] || null, normal: null, rough: null, rotated: false };
@@ -970,21 +971,20 @@ function updateModularIconActiveStates() {
                 return new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.8, metalness: 0, envMapIntensity: 0.8 });
             }
 
-            // Klonuj tekstury i ustaw repeat + opcjonalny obrót 90° dla płyt bocznych
-            // Obrót w Three.js zamiast osobnego pliku → identyczny kolor na wszystkich płytach
+            // Klonuj tekstury i ustaw repeat
             const _cloneTex = (src, isSRGB) => {
                 if (!src) return null;
                 const c = src.clone();
                 c.wrapS = c.wrapT = THREE.RepeatWrapping;
                 if (isSRGB) c.encoding = THREE.sRGBEncoding;
-                if (doRotate) {
-                    // Płyta boczna: słoje pionowe — obróć teksturę 90°
-                    c.rotation = Math.PI / 2;
-                    c.center.set(0.5, 0.5);
-                    // Po obróceniu zamieniamy powtórzenia X↔Y
-                    c.repeat.set(d / SHELF3D_SCALE, h / SHELF3D_SCALE);
+                if (isSide) {
+                    // Płyta boczna: tekstura _vert ma pionowe słoje
+                    // repeat: X=głębokość, Y=wysokość
+                    c.repeat.set(d / SHELF3D_SCALE_SIDE, h / SHELF3D_SCALE_SIDE);
                 } else {
-                    c.repeat.set(w / SHELF3D_SCALE, d / SHELF3D_SCALE);
+                    // Półka pozioma: słoje poziome
+                    // repeat: X=szerokość, Y=głębokość
+                    c.repeat.set(w / SHELF3D_SCALE_HORIZ, d / SHELF3D_SCALE_HORIZ);
                 }
                 c.needsUpdate = true;
                 return c;
@@ -1068,102 +1068,91 @@ function updateModularIconActiveStates() {
         function shelf3dInitDebugPanel() {
             if (!renderer || !scene || !_dbgHemi || !_dbgDir1 || !_dbgDir2) return;
             const cfg = {
-                exposure:     renderer.toneMappingExposure,
-                scale:        SHELF3D_SCALE,
-                hemiInt:      _dbgHemi.intensity,
-                dir1Int:      _dbgDir1.intensity,
-                dir2Int:      _dbgDir2.intensity,
-                roughness:    0.68,
-                normalScale:  0.6,
-                envInt:       0.7,
+                exposure:    renderer.toneMappingExposure,
+                scaleH:      SHELF3D_SCALE_HORIZ,
+                scaleV:      SHELF3D_SCALE_SIDE,
+                hemiInt:     _dbgHemi.intensity,
+                dir1Int:     _dbgDir1.intensity,
+                dir2Int:     _dbgDir2.intensity,
+                roughness:   0.68,
+                normalScale: 0.6,
+                envInt:      0.7,
             };
-            // Przycisk otwierający panel
+            const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
             const btn = document.createElement('button');
             btn.id = 'shelf3dDbgBtn';
-            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
+            btn.innerHTML = GEAR;
             btn.title = 'Panel wizualny (Ctrl+Shift+D)';
             btn.style.cssText = 'position:fixed;bottom:110px;right:15px;z-index:99999;width:42px;height:42px;border-radius:50%;background:#18181b;color:#f59e0b;border:2px solid #f59e0b;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.4);transition:transform 0.15s;';
-            btn.onmouseenter = () => btn.style.transform = 'scale(1.12)';
-            btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+            btn.onmouseenter = () => btn.style.transform='scale(1.12)';
+            btn.onmouseleave = () => btn.style.transform='scale(1)';
             document.body.appendChild(btn);
-            // Panel
             const panel = document.createElement('div');
             panel.id = 'shelf3dDbg';
-            panel.style.cssText = 'display:none;position:fixed;top:10px;right:10px;z-index:99998;background:rgba(12,12,18,0.96);color:#f0f0f0;padding:16px;border-radius:14px;font-family:ui-monospace,monospace;font-size:12px;width:310px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);border:1px solid #2a2a3a;';
-            // Nagłówek
+            panel.style.cssText = 'display:none;position:fixed;top:10px;right:10px;z-index:99998;background:rgba(12,12,18,0.96);color:#f0f0f0;padding:16px;border-radius:14px;font-family:ui-monospace,monospace;font-size:12px;width:320px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.7);border:1px solid #2a2a3a;';
             const hdr = document.createElement('div');
             hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
-            hdr.innerHTML = '<span style="font-size:14px;font-weight:bold;color:#f59e0b;letter-spacing:0.5px;">🎨 Panel wizualny 3D</span>';
+            hdr.innerHTML = '<span style="font-size:14px;font-weight:bold;color:#f59e0b;">🎨 Panel wizualny 3D</span>';
             const closeBtn = document.createElement('button');
             closeBtn.innerHTML = '&times;';
             closeBtn.style.cssText = 'background:none;border:none;color:#888;cursor:pointer;font-size:20px;line-height:1;padding:0;';
             hdr.appendChild(closeBtn);
             panel.appendChild(hdr);
-            // Helpers
-            function sec(title) {
-                const d = document.createElement('div');
-                d.style.cssText = 'color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 7px;border-bottom:1px solid #2a2a3a;padding-bottom:4px;font-weight:bold;';
-                d.textContent = title;
-                return d;
+            function sec(t) { const d=document.createElement('div'); d.style.cssText='color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 7px;border-bottom:1px solid #2a2a3a;padding-bottom:4px;font-weight:bold;'; d.textContent=t; return d; }
+            function row(label, key, min, max, step, cb) {
+                const w=document.createElement('div'); w.style.marginBottom='9px';
+                const top=document.createElement('div'); top.style.cssText='display:flex;justify-content:space-between;margin-bottom:3px;';
+                const lbl=document.createElement('span'); lbl.textContent=label; lbl.style.color='#9ca3af';
+                const vel=document.createElement('span'); vel.style.color='#e5e7eb'; vel.id='dbgv_'+key; vel.textContent=cfg[key].toFixed(2);
+                top.appendChild(lbl); top.appendChild(vel);
+                const inp=document.createElement('input'); inp.type='range'; inp.min=min; inp.max=max; inp.step=step; inp.value=cfg[key];
+                inp.style.cssText='width:100%;cursor:pointer;accent-color:#f59e0b;height:4px;';
+                inp.addEventListener('input',()=>{ cfg[key]=parseFloat(inp.value); vel.textContent=cfg[key].toFixed(2); cb(cfg[key]); updateCode(); });
+                w.appendChild(top); w.appendChild(inp); return w;
             }
-            function sliderRow(label, key, min, max, step, cb) {
-                const wrap = document.createElement('div');
-                wrap.style.cssText = 'margin-bottom:9px;';
-                const top = document.createElement('div');
-                top.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:3px;';
-                const lbl = document.createElement('span'); lbl.textContent = label; lbl.style.color = '#9ca3af';
-                const valEl = document.createElement('span'); valEl.style.color = '#e5e7eb'; valEl.id = 'dbgv_'+key; valEl.textContent = cfg[key].toFixed(2);
-                top.appendChild(lbl); top.appendChild(valEl);
-                const inp = document.createElement('input');
-                inp.type='range'; inp.min=min; inp.max=max; inp.step=step; inp.value=cfg[key];
-                inp.style.cssText = 'width:100%;cursor:pointer;accent-color:#f59e0b;height:4px;';
-                inp.addEventListener('input', () => { cfg[key]=parseFloat(inp.value); valEl.textContent=cfg[key].toFixed(2); cb(cfg[key]); updateCode(); });
-                wrap.appendChild(top); wrap.appendChild(inp); return wrap;
-            }
-            // Sekcje
-            panel.appendChild(sec('🔆 Ekspozycja (jasność)'));
-            panel.appendChild(sliderRow('Jasność sceny', 'exposure', 0.3, 1.5, 0.01, v => { renderer.toneMappingExposure = v; }));
-            panel.appendChild(sec('🌲 Tekstura drewna'));
-            panel.appendChild(sliderRow('Skala słoi (↓ = drobniejsze)', 'scale', 0.5, 5.0, 0.05, v => { SHELF3D_SCALE = v; if(typeof updatePreview==='function') updatePreview(true); }));
+            function rebuildMats() { if(typeof updatePreview==='function') updatePreview(true); }
+            // === Ekspozycja ===
+            panel.appendChild(sec('🔆 Ekspozycja (jasność całości)'));
+            panel.appendChild(row('Jasność sceny','exposure',0.3,1.5,0.01, v=>{ renderer.toneMappingExposure=v; }));
+            // === Tekstura ===
+            panel.appendChild(sec('🌲 Słoje — elementy POZIOME (półki)'));
+            panel.appendChild(row('Rozmiar wzoru ← mały | duży →','scaleH',1.0,8.0,0.1, v=>{ SHELF3D_SCALE_HORIZ=v; SHELF3D_SCALE=v; rebuildMats(); }));
+            panel.appendChild(sec('🪵 Słoje — elementy PIONOWE (boki)'));
+            panel.appendChild(row('Rozmiar wzoru ← mały | duży →','scaleV',1.0,8.0,0.1, v=>{ SHELF3D_SCALE_SIDE=v; rebuildMats(); }));
+            // === Oświetlenie ===
             panel.appendChild(sec('💡 Oświetlenie'));
-            panel.appendChild(sliderRow('Hemisphere (niebo)', 'hemiInt', 0, 1.5, 0.01, v => { _dbgHemi.intensity = v; }));
-            panel.appendChild(sliderRow('Światło główne (przód)', 'dir1Int', 0, 2, 0.01, v => { _dbgDir1.intensity = v; }));
-            panel.appendChild(sliderRow('Światło boczne (tył)', 'dir2Int', 0, 1, 0.01, v => { _dbgDir2.intensity = v; }));
-            panel.appendChild(sec('🪵 Materiał drewna'));
-            panel.appendChild(sliderRow('Chropowatość', 'roughness', 0, 1, 0.01, v => { scene.traverse(o => { if(o.isMesh && o.material && o.material.isMeshPhysicalMaterial && o.material.map) { o.material.roughness=v; o.material.needsUpdate=true; } }); }));
-            panel.appendChild(sliderRow('Normalna (głębokość słoi)', 'normalScale', 0, 1.5, 0.01, v => { scene.traverse(o => { if(o.isMesh && o.material && o.material.normalMap) { o.material.normalScale.set(v,v); o.material.needsUpdate=true; } }); }));
-            panel.appendChild(sliderRow('Odbicia środowiska', 'envInt', 0, 2, 0.01, v => { scene.traverse(o => { if(o.isMesh && o.material && o.material.isMeshPhysicalMaterial && o.material.map) { o.material.envMapIntensity=v; o.material.needsUpdate=true; } }); }));
-            // Output kodu
-            const codeWrap = document.createElement('div');
-            codeWrap.style.cssText = 'margin-top:14px;border-top:1px solid #2a2a3a;padding-top:12px;';
-            const codeLbl = document.createElement('div');
-            codeLbl.style.cssText = 'color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px;font-weight:bold;';
-            codeLbl.textContent = '📋 Kod do wklejenia w configurator.js';
-            const codePre = document.createElement('pre');
-            codePre.id = 'dbgCode';
-            codePre.style.cssText = 'background:#09090f;padding:10px;border-radius:8px;font-size:10px;color:#86efac;overflow-x:auto;white-space:pre-wrap;margin:0;border:1px solid #1a2a1a;line-height:1.5;';
-            const copyBtn2 = document.createElement('button');
-            copyBtn2.textContent = '📋 Kopiuj wartości';
-            copyBtn2.style.cssText = 'margin-top:8px;width:100%;padding:8px;background:#f59e0b;color:#000;border:none;border-radius:7px;cursor:pointer;font-weight:bold;font-size:12px;';
-            copyBtn2.onclick = () => { navigator.clipboard.writeText(codePre.textContent).then(() => { copyBtn2.textContent='✅ Skopiowano!'; setTimeout(()=>copyBtn2.textContent='📋 Kopiuj wartości',2000); }); };
-            codeWrap.appendChild(codeLbl); codeWrap.appendChild(codePre); codeWrap.appendChild(copyBtn2);
-            panel.appendChild(codeWrap);
+            panel.appendChild(row('Światło ogólne (hemisphere)','hemiInt',0,1.5,0.01, v=>{ _dbgHemi.intensity=v; }));
+            panel.appendChild(row('Światło główne (przód-góra)','dir1Int',0,2,0.01, v=>{ _dbgDir1.intensity=v; }));
+            panel.appendChild(row('Światło boczne (tył)','dir2Int',0,1,0.01, v=>{ _dbgDir2.intensity=v; }));
+            // === Materiał ===
+            panel.appendChild(sec('🔩 Materiał drewna'));
+            panel.appendChild(row('Chropowatość (mała=połysk)','roughness',0,1,0.01, v=>{ scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.roughness=v;o.material.needsUpdate=true;} }); }));
+            panel.appendChild(row('Głębokość słoi (normal map)','normalScale',0,1.5,0.01, v=>{ scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.normalMap){o.material.normalScale.set(v,v);o.material.needsUpdate=true;} }); }));
+            panel.appendChild(row('Odbicia środowiska','envInt',0,2,0.01, v=>{ scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.envMapIntensity=v;o.material.needsUpdate=true;} }); }));
+            // === Kod ===
+            const cw=document.createElement('div'); cw.style.cssText='margin-top:14px;border-top:1px solid #2a2a3a;padding-top:12px;';
+            const cl=document.createElement('div'); cl.style.cssText='color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px;font-weight:bold;'; cl.textContent='📋 Kod do wklejenia w configurator.js';
+            const cp=document.createElement('pre'); cp.id='dbgCode'; cp.style.cssText='background:#09090f;padding:10px;border-radius:8px;font-size:10px;color:#86efac;overflow-x:auto;white-space:pre-wrap;margin:0;border:1px solid #1a2a1a;line-height:1.5;';
+            const cb2=document.createElement('button'); cb2.textContent='📋 Kopiuj i wklej do mnie'; cb2.style.cssText='margin-top:8px;width:100%;padding:8px;background:#f59e0b;color:#000;border:none;border-radius:7px;cursor:pointer;font-weight:bold;font-size:12px;';
+            cb2.onclick=()=>{ navigator.clipboard.writeText(cp.textContent).then(()=>{ cb2.textContent='✅ Skopiowano!'; setTimeout(()=>cb2.textContent='📋 Kopiuj i wklej do mnie',2000); }); };
+            cw.appendChild(cl); cw.appendChild(cp); cw.appendChild(cb2); panel.appendChild(cw);
             document.body.appendChild(panel);
             function updateCode() {
-                codePre.textContent =
+                cp.textContent=
 'renderer.toneMappingExposure = '+cfg.exposure.toFixed(2)+';\n'+
-'let SHELF3D_SCALE = '+cfg.scale.toFixed(2)+';\n\n'+
+'let SHELF3D_SCALE_HORIZ = '+cfg.scaleH.toFixed(1)+';\n'+
+'let SHELF3D_SCALE_SIDE  = '+cfg.scaleV.toFixed(1)+';\n\n'+
 '// Oświetlenie\nnew THREE.HemisphereLight(0xffe8d0,0x221a00,'+cfg.hemiInt.toFixed(2)+');\n'+
-'DirectionalLight(0xfff5e8, '+cfg.dir1Int.toFixed(2)+'); // główne\n'+
-'DirectionalLight(0xfff0c0, '+cfg.dir2Int.toFixed(2)+'); // boczne\n\n'+
+'DirectionalLight(0xfff5e8, '+cfg.dir1Int.toFixed(2)+');\n'+
+'DirectionalLight(0xfff0c0, '+cfg.dir2Int.toFixed(2)+');\n\n'+
 '// Materiał\nroughness: '+cfg.roughness.toFixed(2)+',\n'+
 'normalScale: '+cfg.normalScale.toFixed(2)+',\n'+
 'envMapIntensity: '+cfg.envInt.toFixed(2)+',';
             }
             updateCode();
-            function toggle() { panel.style.display = panel.style.display==='none'?'block':'none'; }
-            btn.onclick = toggle; closeBtn.onclick = toggle;
-            document.addEventListener('keydown', e => { if(e.ctrlKey && e.shiftKey && e.key==='D') { e.preventDefault(); toggle(); } });
+            function toggle(){ panel.style.display=panel.style.display==='none'?'block':'none'; }
+            btn.onclick=toggle; closeBtn.onclick=toggle;
+            document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.shiftKey&&e.key==='D'){e.preventDefault();toggle();} });
         }
         function onWindowResize() { const container = threeJsCanvasWrapper; if (!camera || !renderer || !container) return; camera.clearViewOffset(); if (renderer && renderer.domElement) renderer.domElement.style.transform = ''; shiftCanvasForHeight(); const width = container.clientWidth; const height = container.clientHeight; if (width > 0 && height > 0) { camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); } else { console.warn("Skipping resize for 3D canvas wrapper with zero dimensions."); } updateDividerIconsVisibility(); updateModularIconsVisibility(); }
         let _lastFrameDataUrl = null;
