@@ -877,26 +877,26 @@ function updateModularIconActiveStates() {
         // Parametry materiału — dopasowane do wyglądu prawdziwej półki (hiperrealistyczna referencja)
         // SHELF3D_MAT_COLOR inicjalizowany leniwie (THREE może nie być gotowe przy deklaracji)
         let SHELF3D_MAT_COLOR       = null; // THREE.Color — init w makeMaterial
-        // Stonowany szary brąz — referencja zdjęciowa, więcej kanału B = mniej żółci
-        let SHELF3D_MAT_COLOR_R     = 0.55;
-        let SHELF3D_MAT_COLOR_G     = 0.48;
-        let SHELF3D_MAT_COLOR_B     = 0.43;
-        // Wyższa szorstkość = bardziej matowe drewno bez plastikowego połysku
-        let SHELF3D_MAT_ROUGHNESS   = 0.72;
-        // Normal-mapa — łagodniejsze słoje
-        let SHELF3D_MAT_NORMAL      = 0.70;
-        // Odbicia środowiska — niskie, by nie podkręcały koloru
-        let SHELF3D_MAT_ENV         = 0.55;
-        let SHELF3D_MAT_CLEARCOAT   = 0.08;
-        let SHELF3D_MAT_CC_ROUGH    = 0.60;
-        // sheen w Three.js r128 = Color (nie float jak w r139+); sheenColor/sheenRoughness nie istnieją w r128
+        // Jasny honey-oak jak ze studyjnej fotografii produktowej
+        let SHELF3D_MAT_COLOR_R     = 0.78;
+        let SHELF3D_MAT_COLOR_G     = 0.65;
+        let SHELF3D_MAT_COLOR_B     = 0.48;
+        // Średnia szorstkość — drewno wciąż naturalnie matowe, ale z subtelnymi refleksami
+        let SHELF3D_MAT_ROUGHNESS   = 0.62;
+        // Normal-mapa — wyraziste słoje bez przesady
+        let SHELF3D_MAT_NORMAL      = 0.85;
+        // Umiarkowane odbicia środowiska — dodają "życia" bez przebarwień
+        let SHELF3D_MAT_ENV         = 0.75;
+        let SHELF3D_MAT_CLEARCOAT   = 0.10;
+        let SHELF3D_MAT_CC_ROUGH    = 0.55;
         let SHELF3D_MAT_SHEEN_ON    = false;
-        // Filtr canvasa: bardziej stonowany efekt fotograficzny
-        let SHELF3D_CANVAS_CONTRAST = 1.08;
-        let SHELF3D_CANVAS_SAT      = 0.72;
-        let SHELF3D_CANVAS_HUE      = -10;    // stopnie (-30..+30), minus = chłodniej, plus = cieplej
-        let SHELF3D_SHADOW_OPACITY  = 0.16;
-        let SHELF3D_RIM_INTENSITY   = 0.45;
+        // Filtr canvasa: bogata fotograficzna paleta
+        let SHELF3D_CANVAS_CONTRAST = 1.12;
+        let SHELF3D_CANVAS_SAT      = 0.92;
+        let SHELF3D_CANVAS_HUE      = -3;     // stopnie (-30..+30), minus = chłodniej, plus = cieplej
+        let SHELF3D_CANVAS_BRIGHT   = 1.05;   // jasność canvasa (1.0 = bez zmian)
+        let SHELF3D_SHADOW_OPACITY  = 0.18;
+        let SHELF3D_RIM_INTENSITY   = 0.40;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -1093,7 +1093,7 @@ function updateModularIconActiveStates() {
             });
         }
 
-        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.10; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = true; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfdf6ec, 0x8a9aaa, 0.50); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8ee, 2.0); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = true; _dbgDir1.shadow.mapSize.width = 4096; _dbgDir1.shadow.mapSize.height = 4096; _dbgDir1.shadow.camera.near = 0.5; _dbgDir1.shadow.camera.far = 80; _dbgDir1.shadow.camera.left = -15; _dbgDir1.shadow.camera.right = 15; _dbgDir1.shadow.camera.top = 15; _dbgDir1.shadow.camera.bottom = -15; _dbgDir1.shadow.radius = 8; _dbgDir1.shadow.bias = -0.0005; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xe8effa, 0.55); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _rimLight = new THREE.DirectionalLight(0xf0f4fa, SHELF3D_RIM_INTENSITY); _rimLight.position.set(0, 6, -10); _rimLight.name = '__rimLight__'; scene.add(_rimLight); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: SHELF3D_SHADOW_OPACITY, transparent: true }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); (function(){ const _bc=document.createElement('canvas'); _bc.width=512; _bc.height=256; const _bx=_bc.getContext('2d'); const _bg=_bx.createRadialGradient(256,128,0,256,128,240); _bg.addColorStop(0,'rgba(0,0,0,0.32)'); _bg.addColorStop(0.20,'rgba(0,0,0,0.20)'); _bg.addColorStop(0.50,'rgba(0,0,0,0.08)'); _bg.addColorStop(0.80,'rgba(0,0,0,0.02)'); _bg.addColorStop(1,'rgba(0,0,0,0)'); _bx.fillStyle=_bg; _bx.fillRect(0,0,512,256); const _bt=new THREE.CanvasTexture(_bc); const _bm=new THREE.MeshBasicMaterial({map:_bt,transparent:true,depthWrite:false}); const _bmesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),_bm); _bmesh.rotation.x=-Math.PI/2; _bmesh.position.y=-5.02; _bmesh.name='__blobShadow__'; scene.add(_bmesh); })(); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+') hue-rotate('+SHELF3D_CANVAS_HUE+'deg)'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
+        function init3D() { const container = threeJsCanvasWrapper; if (!container) { console.error("Three.js canvas wrapper (#threeJsCanvasWrapper) not found."); return; } scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff); camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000); camera.position.set(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); renderer.setSize(container.clientWidth, container.clientHeight); renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.35; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = true; container.innerHTML = ''; renderer.domElement.style.borderRadius = '0'; container.appendChild(renderer.domElement); const _rBtn = document.createElement('button'); _rBtn.id = 'rotateToggleBtn'; _rBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;z-index:20;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.18);padding:0;'; _rBtn.title = 'Zatrzymaj/wznów obracanie'; _rBtn.onclick = function() { autoRotateEnabled = !autoRotateEnabled; const ip = document.getElementById('rotateIconPause'); const ipl = document.getElementById('rotateIconPlay'); if(ip && ipl) { if(autoRotateEnabled) { ip.style.display=''; ipl.style.display='none'; } else { ip.style.display='none'; ipl.style.display=''; } } }; _rBtn.innerHTML = '<svg id="rotateIconPause" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" style="width:15px;height:15px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><svg id="rotateIconPlay" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="display:none;width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>'; container.style.position = 'relative'; container.appendChild(_rBtn); _dbgHemi = new THREE.HemisphereLight(0xfdf6ec, 0x8a9aaa, 0.85); scene.add(_dbgHemi); _dbgDir1 = new THREE.DirectionalLight(0xfff8ee, 2.6); _dbgDir1.position.set(-6, 14, 10); _dbgDir1.castShadow = false; scene.add(_dbgDir1); _dbgDir2 = new THREE.DirectionalLight(0xe8effa, 0.75); _dbgDir2.position.set(8, 4, -2); scene.add(_dbgDir2); const _rimLight = new THREE.DirectionalLight(0xf0f4fa, SHELF3D_RIM_INTENSITY); _rimLight.position.set(0, 6, -10); _rimLight.name = '__rimLight__'; scene.add(_rimLight); const _shadowFloorGeo = new THREE.PlaneGeometry(60, 60); const _shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0, transparent: true, depthWrite: false }); const _shadowFloor = new THREE.Mesh(_shadowFloorGeo, _shadowFloorMat); _shadowFloor.rotation.x = -Math.PI / 2; _shadowFloor.position.y = -5.0; _shadowFloor.receiveShadow = true; _shadowFloor.visible = false; _shadowFloor.name = '__shadowFloor__'; scene.add(_shadowFloor); (function(){ const _bc=document.createElement('canvas'); _bc.width=512; _bc.height=256; const _bx=_bc.getContext('2d'); const _bg=_bx.createRadialGradient(256,128,0,256,128,240); _bg.addColorStop(0,'rgba(0,0,0,0.32)'); _bg.addColorStop(0.20,'rgba(0,0,0,0.20)'); _bg.addColorStop(0.50,'rgba(0,0,0,0.08)'); _bg.addColorStop(0.80,'rgba(0,0,0,0.02)'); _bg.addColorStop(1,'rgba(0,0,0,0)'); _bx.fillStyle=_bg; _bx.fillRect(0,0,512,256); const _bt=new THREE.CanvasTexture(_bc); const _bm=new THREE.MeshBasicMaterial({map:_bt,transparent:true,depthWrite:false}); const _bmesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),_bm); _bmesh.rotation.x=-Math.PI/2; _bmesh.position.y=-5.02; _bmesh.name='__blobShadow__'; scene.add(_bmesh); })(); renderer.domElement.style.filter='contrast('+SHELF3D_CANVAS_CONTRAST+') saturate('+SHELF3D_CANVAS_SAT+') hue-rotate('+SHELF3D_CANVAS_HUE+'deg) brightness('+SHELF3D_CANVAS_BRIGHT+')'; shelf3dInitTextures(scene, renderer); controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.target.set(0, -2.0, 0);
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
@@ -1120,6 +1120,7 @@ function updateModularIconActiveStates() {
                 contrast:    SHELF3D_CANVAS_CONTRAST,
                 saturation:  SHELF3D_CANVAS_SAT,
                 hue:         SHELF3D_CANVAS_HUE,
+                bright:      SHELF3D_CANVAS_BRIGHT,
                 shadowOp:    SHELF3D_SHADOW_OPACITY,
             };
             const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
@@ -1178,7 +1179,7 @@ function updateModularIconActiveStates() {
             panel.appendChild(row('Światło boczne (tył)','dir2Int',0,1.5,0.01, v=>{ _dbgDir2.intensity=v; }));
             panel.appendChild(row('Rim light (kontur z tyłu)','rimInt',0,1.5,0.01, v=>{ SHELF3D_RIM_INTENSITY=v; const _rl=scene.getObjectByName('__rimLight__'); if(_rl) _rl.intensity=v; }));
             // === Kolor drewna ===
-            function applyFilter(){ renderer.domElement.style.filter='contrast('+cfg.contrast+') saturate('+cfg.saturation+') hue-rotate('+cfg.hue+'deg)'; }
+            function applyFilter(){ renderer.domElement.style.filter='contrast('+cfg.contrast+') saturate('+cfg.saturation+') hue-rotate('+cfg.hue+'deg) brightness('+cfg.bright+')'; }
             function applyColor(){
                 SHELF3D_MAT_COLOR_R=cfg.colorDark; SHELF3D_MAT_COLOR_G=cfg.colorWarm; SHELF3D_MAT_COLOR_B=cfg.colorBlue;
                 const c=new THREE.Color(SHELF3D_MAT_COLOR_R,SHELF3D_MAT_COLOR_G,SHELF3D_MAT_COLOR_B);
@@ -1204,16 +1205,28 @@ function updateModularIconActiveStates() {
                         if(inp) inp.value=vals[k];
                         if(lbl) lbl.textContent=Number(vals[k]).toFixed(2);
                     });
+                    if('exposure' in vals) renderer.toneMappingExposure=vals.exposure;
+                    if('dir1Int'  in vals) _dbgDir1.intensity=vals.dir1Int;
+                    if('dir2Int'  in vals) _dbgDir2.intensity=vals.dir2Int;
+                    if('hemiInt'  in vals) _dbgHemi.intensity=vals.hemiInt;
+                    if('rimInt'   in vals){ SHELF3D_RIM_INTENSITY=vals.rimInt; const _rl=scene.getObjectByName('__rimLight__'); if(_rl) _rl.intensity=vals.rimInt; }
+                    if('roughness'   in vals){ SHELF3D_MAT_ROUGHNESS=vals.roughness; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.roughness=vals.roughness;o.material.needsUpdate=true;} }); }
+                    if('normalScale' in vals){ SHELF3D_MAT_NORMAL=vals.normalScale; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.normalMap){o.material.normalScale.set(vals.normalScale,vals.normalScale);o.material.needsUpdate=true;} }); }
+                    if('envInt'      in vals){ SHELF3D_MAT_ENV=vals.envInt; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshPhysicalMaterial&&o.material.map){o.material.envMapIntensity=vals.envInt;o.material.needsUpdate=true;} }); }
                     applyColor(); applyFilter(); applyShadow();
                     if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials();
                     updateCode();
                 };
                 return b;
             }
-            presetWrap.appendChild(mkPreset('❄ Chłodny', { colorDark:0.52, colorWarm:0.48, colorBlue:0.42, hue:-12, saturation:0.78, contrast:1.12 }, '#1e3a5f'));
-            presetWrap.appendChild(mkPreset('⚖ Neutralny', { colorDark:0.58, colorWarm:0.50, colorBlue:0.40, hue:-8, saturation:0.85, contrast:1.12 }, '#3f3f46'));
-            presetWrap.appendChild(mkPreset('☀ Ciepły', { colorDark:0.70, colorWarm:0.58, colorBlue:0.40, hue:0, saturation:1.00, contrast:1.15 }, '#92400e'));
+            presetWrap.appendChild(mkPreset('❄ Chłodny', { colorDark:0.52, colorWarm:0.48, colorBlue:0.42, hue:-12, saturation:0.78, contrast:1.10, bright:1.00, exposure:1.10, dir1Int:2.0, hemiInt:0.55 }, '#1e3a5f'));
+            presetWrap.appendChild(mkPreset('⚖ Neutralny', { colorDark:0.58, colorWarm:0.50, colorBlue:0.40, hue:-8, saturation:0.85, contrast:1.12, bright:1.00, exposure:1.20, dir1Int:2.2, hemiInt:0.65 }, '#3f3f46'));
+            presetWrap.appendChild(mkPreset('☀ Ciepły', { colorDark:0.70, colorWarm:0.58, colorBlue:0.40, hue:0, saturation:1.00, contrast:1.15, bright:1.00, exposure:1.25, dir1Int:2.4, hemiInt:0.70 }, '#92400e'));
             panel.appendChild(presetWrap);
+            const presetWrap2=document.createElement('div'); presetWrap2.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px;';
+            presetWrap2.appendChild(mkPreset('📸 Foto-studio', { colorDark:0.78, colorWarm:0.65, colorBlue:0.48, hue:-3, saturation:0.92, contrast:1.12, bright:1.05, exposure:1.35, dir1Int:2.6, dir2Int:0.75, hemiInt:0.85, rimInt:0.40, roughness:0.62, normalScale:0.85, envInt:0.75, shadowOp:0.18 }, '#1f6feb'));
+            presetWrap2.appendChild(mkPreset('🌅 Naturalne', { colorDark:0.66, colorWarm:0.55, colorBlue:0.42, hue:-5, saturation:0.82, contrast:1.10, bright:1.02, exposure:1.18, dir1Int:2.0, dir2Int:0.65, hemiInt:0.75, rimInt:0.30, shadowOp:0.14 }, '#15803d'));
+            panel.appendChild(presetWrap2);
             // === Lakier ===
             panel.appendChild(sec('✨ Lakier (clearcoat) i Sheen'));
             panel.appendChild(row('Clearcoat — warstwa lakieru','clearcoat',0,1,0.01, v=>{ SHELF3D_MAT_CLEARCOAT=v; scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.clearcoat!==undefined){o.material.clearcoat=v;o.material.needsUpdate=true;} }); }));
@@ -1224,6 +1237,7 @@ function updateModularIconActiveStates() {
             panel.appendChild(row('Kontrast','contrast',0.7,1.8,0.01, v=>{ SHELF3D_CANVAS_CONTRAST=v; applyFilter(); }));
             panel.appendChild(row('Nasycenie kolorów','saturation',0.3,2.0,0.01, v=>{ SHELF3D_CANVAS_SAT=v; applyFilter(); }));
             panel.appendChild(row('Hue rotate (- chłodno / + ciepło)','hue',-30,30,1, v=>{ SHELF3D_CANVAS_HUE=v; applyFilter(); }));
+            panel.appendChild(row('Jasność canvasa (brightness)','bright',0.6,1.6,0.01, v=>{ SHELF3D_CANVAS_BRIGHT=v; applyFilter(); }));
             // === Cień ===
             panel.appendChild(sec('🌑 Cień kontaktowy'));
             panel.appendChild(row('Siła cienia pod półką','shadowOp',0,0.6,0.01, v=>{ applyShadow(); }));
