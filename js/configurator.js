@@ -869,8 +869,8 @@ function updateModularIconActiveStates() {
         const SHELF3D_ENV_PATH      = 'tekstura/env-neon_photostudio_custom_bw_2k.jpg';
 
         // Skala powtarzania tekstury: 1 j. Three.js = 10 cm
-        // SHELF3D_SCALE = 1.8 → jedno powtórzenie co ~18 cm — drobniejsze słoje, bardziej realistyczne
-        let SHELF3D_SCALE = 1.8;
+        // SHELF3D_SCALE = 2.5 → jedno powtórzenie co ~25 cm — wyraźne słoje widoczne z dystansu
+        let SHELF3D_SCALE = 2.5;
 
         function shelf3dInitTextures(scene, _renderer) {
             const loader = new THREE.TextureLoader();
@@ -943,15 +943,18 @@ function updateModularIconActiveStates() {
         function shelf3dGetTexEntry(colorVal, forSide) {
             const entry = SHELF3D_COLOR_TEXTURE[colorVal ? colorVal.toUpperCase() : '']
                        || SHELF3D_COLOR_TEXTURE[colorVal];
-            if (!entry) return { diffuse: null, normal: null, rough: null };
+            if (!entry) return { diffuse: null, normal: null, rough: null, rotated: false };
             if (typeof entry === 'object') {
+                // Zawsze używamy poziomej tekstury — obrót o 90° robimy programowo w _cloneTex
+                // dzięki czemu obie płyty mają identyczny kolor i kontrast
                 return {
-                    diffuse: _shelf3dTextures[forSide ? entry.vert    : entry.horiz]   || null,
-                    normal:  _shelf3dTextures[forSide ? entry.normalV : entry.normalH] || null,
-                    rough:   _shelf3dTextures[forSide ? entry.roughV  : entry.roughH]  || null,
+                    diffuse: _shelf3dTextures[entry.horiz]   || null,
+                    normal:  _shelf3dTextures[entry.normalH] || null,
+                    rough:   _shelf3dTextures[entry.roughH]  || null,
+                    rotated: forSide,
                 };
             }
-            return { diffuse: _shelf3dTextures[entry] || null, normal: null, rough: null };
+            return { diffuse: _shelf3dTextures[entry] || null, normal: null, rough: null, rotated: false };
         }
 
         function shelf3dMakeMaterialForBoard(type, w, h, d) {
@@ -960,25 +963,30 @@ function updateModularIconActiveStates() {
                 ? (sideColorSelect  ? sideColorSelect.value  : '')
                 : (shelfColorSelect ? shelfColorSelect.value : '');
 
-            const { diffuse: faceTex, normal: normTex, rough: roughTex } = shelf3dGetTexEntry(colorVal, isSide);
+            const { diffuse: faceTex, normal: normTex, rough: roughTex, rotated: doRotate } = shelf3dGetTexEntry(colorVal, isSide);
 
             if (!faceTex) {
                 const col = (colorVal && colorVal !== '') ? colorVal : '#8B7355';
                 return new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.8, metalness: 0, envMapIntensity: 0.8 });
             }
 
-            // Klonuj tekstury i ustaw repeat
+            // Klonuj tekstury i ustaw repeat + opcjonalny obrót 90° dla płyt bocznych
+            // Obrót w Three.js zamiast osobnego pliku → identyczny kolor na wszystkich płytach
             const _cloneTex = (src, isSRGB) => {
                 if (!src) return null;
                 const c = src.clone();
                 c.wrapS = c.wrapT = THREE.RepeatWrapping;
                 if (isSRGB) c.encoding = THREE.sRGBEncoding;
-                c.needsUpdate = true;
-                if (isSide) {
-                    c.repeat.set(h / SHELF3D_SCALE, d / SHELF3D_SCALE);
+                if (doRotate) {
+                    // Płyta boczna: słoje pionowe — obróć teksturę 90°
+                    c.rotation = Math.PI / 2;
+                    c.center.set(0.5, 0.5);
+                    // Po obróceniu zamieniamy powtórzenia X↔Y
+                    c.repeat.set(d / SHELF3D_SCALE, h / SHELF3D_SCALE);
                 } else {
                     c.repeat.set(w / SHELF3D_SCALE, d / SHELF3D_SCALE);
                 }
+                c.needsUpdate = true;
                 return c;
             };
 
