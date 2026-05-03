@@ -13,7 +13,75 @@
         let galleryTabsContainer, galleryGridContainer, galleryImageArea, galleryPrevArrow, galleryNextArrow;
         let show3dButton, collapse3dPanelButton;
         let autoRotateEnabled = false;
-        const initialCameraPosition = { x: 3, y: 6, z: 7 };
+        const initialCameraPosition = { x: 4.455, y: 2.7246, z: 7.1042 };
+        // Pozycja kamery per rozmiar półki (klucz: "szerokość_wysokość")
+        // Domyślna (fallback) = initialCameraPosition
+        const SHELF3D_CAM_PER_SIZE = {
+            '44_40': { x: 3.8196, y: 2.3360, z: 6.0910, tx: 0, ty: 0, tz: 0 },
+            '44_60': { x: 4.4550, y: 2.7246, z: 7.1042, tx: 0, ty: 0, tz: 0 },
+            '44_80': { x: 5.7574, y: 3.5212, z: 9.1811, tx: 0, ty: 0, tz: 0 },
+        };
+        function shelf3dGetCamForSize(w, h) {
+            const key = w + '_' + h;
+            return SHELF3D_CAM_PER_SIZE[key] || { x: initialCameraPosition.x, y: initialCameraPosition.y, z: initialCameraPosition.z, tx: 0, ty: 0, tz: 0 };
+        }
+        // Wspólna funkcja FOV distance — ile odległości potrzeba żeby zmieścić półkę W×H
+        function _shelf3dCalcDist(widthCm, heightCm, pad) {
+            const _tH = parseFloat(heightCm) / 10;
+            const _tW = parseFloat(widthCm) / 10;
+            const _p  = pad || 1.40;
+            const _fovV = camera.fov * Math.PI / 180;
+            const _fovH = 2 * Math.atan(Math.tan(_fovV / 2) * camera.aspect);
+            const _dV = (_tH / 2) / Math.tan(_fovV / 2) * _p;
+            const _dW = (_tW / 2) / Math.tan(_fovH / 2) * _p;
+            return Math.max(_dV, _dW);
+        }
+
+        // Szybkie oszacowanie — zachowuje bieżący kąt kamery, skaluje odległość do wymiarów.
+        // optDir: opcjonalny THREE.Vector3 z wymuszonym kierunkiem (np. kąt desktop)
+        function shelf3dFitCameraPredict(widthCm, heightCm, dur, optDir) {
+            if (!camera || !controls) return;
+            const _dist = _shelf3dCalcDist(widthCm, heightCm, 1.40);
+            const _dir  = optDir
+                ? optDir.clone().normalize()
+                : new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            const _np = controls.target.clone().add(_dir.multiplyScalar(_dist));
+            gsap.to(camera.position, { x: _np.x, y: _np.y, z: _np.z, duration: dur || 0.5, ease: 'power1.inOut', onUpdate: () => controls.update() });
+        }
+
+        // Na mobile — kąt identyczny co desktop (z tabeli), tylko odległość dopasowana do canvasu.
+        function shelf3dFitCameraMobile(widthCm, heightCm, dur) {
+            if (!camera || !controls) return;
+            const _w = parseInt(widthCm) || 44;
+            const _h = parseInt(heightCm) || 60;
+            const _camS = shelf3dGetCamForSize(_w, _h);
+            // Kierunek z tabeli desktop (od targetu do pozycji kamery)
+            const _tx = _camS.tx || 0, _ty = _camS.ty || 0, _tz = _camS.tz || 0;
+            const _desktopDir = new THREE.Vector3(_camS.x - _tx, _camS.y - _ty, _camS.z - _tz).normalize();
+            controls.target.set(_tx, _ty, _tz);
+            const _dist = _shelf3dCalcDist(_w, _h, 1.40);
+            const _np = new THREE.Vector3(_tx, _ty, _tz).add(_desktopDir.multiplyScalar(_dist));
+            gsap.to(camera.position, { x: _np.x, y: _np.y, z: _np.z, duration: dur || 0.4, ease: 'power1.inOut', onUpdate: () => controls.update() });
+        }
+
+        // Precyzyjne dopasowanie na podstawie rzeczywistego bounding box — optDir: wymuszony kierunek
+        function shelf3dAutoFitCamera(dur, optDir) {
+            if (!camera || !controls || !shelfGroup) return;
+            const _box = new THREE.Box3().setFromObject(shelfGroup);
+            const _size = _box.getSize(new THREE.Vector3());
+            const _center = _box.getCenter(new THREE.Vector3());
+            const _fovV = camera.fov * Math.PI / 180;
+            const _fovH = 2 * Math.atan(Math.tan(_fovV / 2) * camera.aspect);
+            const _pad = 1.32;
+            const _dV = (_size.y / 2) / Math.tan(_fovV / 2) * _pad;
+            const _dH = (_size.x / 2) / Math.tan(_fovH / 2) * _pad;
+            const _dist = Math.max(_dV, _dH);
+            const _dir = optDir
+                ? optDir.clone().normalize()
+                : new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            const _np = _center.clone().add(_dir.multiplyScalar(_dist));
+            gsap.to(camera.position, { x: _np.x, y: _np.y, z: _np.z, duration: dur || 0.35, ease: 'power1.inOut', onUpdate: () => controls.update() });
+        }
         let currentAnimationTimeline = null;
         let lastValidConfig = {};
         // Custom półki/przegródki z edytora (dla isCustomLayout)
@@ -864,6 +932,19 @@ function updateModularIconActiveStates() {
             '#000000':  null,
         };
 
+        // Ustawienia oświetlenia per kolor półki
+        // Biała i czarna mają te same ustawienia ze screenshota; dąb craft = domyślne (Studio)
+        const SHELF3D_LIGHT_PER_COLOR = {
+            '#FFFFFF': {az:153,el:50,int:2.15,temp:79,hemi:0.00,rim:0.45,rimAz:223,shOp:0.00,shBlur:1,blOp:0.00},
+            '#000000': {az:-140,el:49,int:4.00,temp:100,hemi:0.70,rim:0.45,rimAz:223,shOp:0.10,shBlur:3,blOp:1.00},
+            '#8B5A2B': {az:140,el:54,int:3.70,temp:100,hemi:0.70,rim:0.45,rimAz:223,shOp:0.10,shBlur:3,blOp:0.20},
+        };
+        function shelf3dApplyColorLight(colorVal) {
+            const key = colorVal ? colorVal.toUpperCase() : '';
+            const cfg = SHELF3D_LIGHT_PER_COLOR[key];
+            if (cfg && window._shelf3dApplyLightVals) window._shelf3dApplyLightVals(cfg);
+        }
+
         // Tekstura krawędzi wspólna dla wszystkich kolorów drewna
         const SHELF3D_EDGE_TEX_PATH = 'tekstura/brzeg_poz_512.jpg';
         const SHELF3D_ENV_PATH      = 'tekstura/env-neon_photostudio_custom_bw_2k.jpg';
@@ -1093,7 +1174,112 @@ function updateModularIconActiveStates() {
         // Zablokuj obrót pionowy — tylko lewo/prawo
         const _lockedPolar = Math.PI / 2.5;
         controls.minPolarAngle = _lockedPolar;
-        controls.maxPolarAngle = _lockedPolar; if (controls) { controls.addEventListener('start', () => { autoRotateEnabled = false; }); controls.addEventListener('end', () => { /* nie wznawiaj obrotu po kliknięciu */ }); } window.addEventListener('resize', onWindowResize, false); updatePreview(true); animate(); shelf3dInitDebugPanel(); shelf3dInitLightPanel(); }
+        controls.maxPolarAngle = _lockedPolar; if (controls) { controls.addEventListener('start', () => { autoRotateEnabled = false; }); controls.addEventListener('end', () => { /* nie wznawiaj obrotu po kliknięciu */ }); } window.addEventListener('resize', onWindowResize, false); updatePreview(true); animate(); shelf3dInitDebugPanel(); shelf3dInitLightPanel(); shelf3dInitCameraHelper(); }
+        function shelf3dInitCameraHelper() {
+            const btn = document.createElement('button');
+            btn.id = 'shelf3dCamHelperBtn';
+            btn.title = 'Kamera + wymiary półki (Ctrl+Shift+K)';
+            btn.style.cssText = 'position:fixed;bottom:214px;right:15px;z-index:99999;width:42px;height:42px;border-radius:50%;background:#18181b;color:#a78bfa;border:2px solid #a78bfa;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.4);transition:transform 0.15s;font-size:20px;line-height:1;';
+            btn.innerHTML = '⚙️';
+            btn.onmouseenter = () => btn.style.transform = 'scale(1.12)';
+            btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+            document.body.appendChild(btn);
+
+            const panel = document.createElement('div');
+            panel.id = 'shelf3dCamHelperPanel';
+            panel.style.cssText = 'display:none;position:fixed;bottom:270px;right:10px;z-index:99998;background:rgba(10,14,26,0.97);color:#f0f0f0;padding:14px 16px;border-radius:12px;font-family:ui-monospace,monospace;font-size:12px;width:310px;box-shadow:0 8px 40px rgba(0,0,0,0.7);border:1px solid #4c1d95;';
+
+            const hdr = document.createElement('div');
+            hdr.style.cssText = 'font-size:13px;font-weight:bold;color:#a78bfa;margin-bottom:4px;';
+            hdr.textContent = '⚙️ Kamera + wymiary półki';
+            panel.appendChild(hdr);
+
+            // Live badge
+            const liveBadge = document.createElement('span');
+            liveBadge.textContent = '● LIVE';
+            liveBadge.style.cssText = 'display:inline-block;font-size:9px;color:#4ade80;letter-spacing:0.1em;margin-bottom:10px;';
+            panel.appendChild(liveBadge);
+
+            const pre = document.createElement('pre');
+            pre.id = 'shelf3dCamHelperPre';
+            pre.style.cssText = 'background:#0a0f1e;padding:10px;border-radius:8px;font-size:10.5px;color:#86efac;margin:0 0 10px;border:1px solid #1a2a3a;line-height:1.75;white-space:pre;overflow-x:auto;';
+            panel.appendChild(pre);
+
+            const hint = document.createElement('div');
+            hint.style.cssText = 'font-size:10px;color:#6b7280;margin-bottom:8px;line-height:1.5;';
+            hint.innerHTML = 'Dane odświeżają się na żywo.<br>Zmień wymiary półki lub obróć/przybliż widok,<br>skopiuj i podaj mi te wartości.';
+            panel.appendChild(hint);
+
+            const copyBtn = document.createElement('button');
+            copyBtn.textContent = '📋 Kopiuj wszystko';
+            copyBtn.style.cssText = 'width:100%;padding:7px 0;background:#4c1d95;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:bold;';
+            copyBtn.onclick = () => { navigator.clipboard.writeText(pre.textContent).then(() => { copyBtn.textContent = '✅ Skopiowano!'; setTimeout(() => copyBtn.textContent = '📋 Kopiuj wszystko', 1500); }); };
+            panel.appendChild(copyBtn);
+            document.body.appendChild(panel);
+
+            function getShelfDims() {
+                try {
+                    const type  = (typeof shelfTypeSelect  !== 'undefined' && shelfTypeSelect)  ? shelfTypeSelect.value  : '?';
+                    const w     = (typeof widthSelect       !== 'undefined' && widthSelect)       ? widthSelect.value      : '?';
+                    const h     = (typeof heightSelect      !== 'undefined' && heightSelect)      ? heightSelect.value     : '?';
+                    const d     = (typeof depthSelect       !== 'undefined' && depthSelect)       ? depthSelect.value      : '?';
+                    const cnt   = (typeof shelfCountSelect  !== 'undefined' && shelfCountSelect)  ? shelfCountSelect.value : '?';
+                    const col   = (typeof shelfColorSelect  !== 'undefined' && shelfColorSelect)  ? shelfColorSelect.value : '?';
+                    return { type, w, h, d, cnt, col };
+                } catch(e) { return null; }
+            }
+
+            let _liveTimer = null;
+            function readCam() {
+                if (!camera || !controls) { pre.textContent = 'Kamera nie załadowana.'; return; }
+                const p = camera.position;
+                const t = controls.target;
+                const dims = getShelfDims();
+                let txt = '';
+                if (dims) {
+                    txt +=
+                        '── PÓŁKA ──────────────────\n' +
+                        'Typ:      ' + dims.type + '\n' +
+                        'Szerokość:' + dims.w    + ' cm\n' +
+                        'Wysokość: ' + dims.h    + ' cm\n' +
+                        'Głębokość:' + dims.d    + ' cm\n' +
+                        'Półek:    ' + dims.cnt  + '\n' +
+                        'Kolor:    ' + dims.col  + '\n\n';
+                }
+                txt +=
+                    '── KAMERA ─────────────────\n' +
+                    'cam.x: ' + p.x.toFixed(4) + '\n' +
+                    'cam.y: ' + p.y.toFixed(4) + '\n' +
+                    'cam.z: ' + p.z.toFixed(4) + '\n\n' +
+                    'tgt.x: ' + t.x.toFixed(4) + '\n' +
+                    'tgt.y: ' + t.y.toFixed(4) + '\n' +
+                    'tgt.z: ' + t.z.toFixed(4);
+                pre.textContent = txt;
+            }
+
+            function startLive() {
+                if (_liveTimer) return;
+                _liveTimer = setInterval(readCam, 200);
+            }
+            function stopLive() {
+                clearInterval(_liveTimer);
+                _liveTimer = null;
+            }
+
+            function toggle() {
+                const isOpen = panel.style.display !== 'none';
+                if (isOpen) {
+                    panel.style.display = 'none';
+                    stopLive();
+                } else {
+                    panel.style.display = 'block';
+                    readCam();
+                    startLive();
+                }
+            }
+            btn.onclick = toggle;
+            document.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.key === 'K') { e.preventDefault(); toggle(); } });
+        }
         function shelf3dInitDebugPanel() {
             if (!renderer || !scene || !_dbgHemi || !_dbgDir1 || !_dbgDir2) return;
             const cfg = {
@@ -1287,6 +1473,8 @@ function updateModularIconActiveStates() {
             const _sr={};
             function _applyPreset(name){ const p=PRESETS[name]; if(!p) return; _az=p.az;_el=p.el;_int=p.int;_temp=p.temp;_hemi=p.hemi;_rim=p.rim;_rimAz=p.rimAz;_shOp=p.shOp;_shBlur=p.shBlur;_blOp=p.blOp; _updMain(); if(_dbgHemi) _dbgHemi.intensity=_hemi; _updRim(); _updSh(); _syncSliders(); }
             function _syncSliders(){ const pairs=[['az',_az,0],['el',_el,0],['int',_int,2],['temp',_temp,0],['hemi',_hemi,2],['rim',_rim,2],['rimAz',_rimAz,0],['shOp',_shOp,2],['shBlur',_shBlur,0],['blOp',_blOp,2]]; pairs.forEach(([k,v,d])=>{ if(_sr[k]){ _sr[k].inp.value=v; _sr[k].val.textContent=v.toFixed(d); } }); }
+            // Eksponuj funkcję do globalnego zastosowania ustawień (używana przez shelf3dApplyColorLight)
+            window._shelf3dApplyLightVals = function(p){ if(!p) return; _az=p.az;_el=p.el;_int=p.int;_temp=p.temp;_hemi=p.hemi;_rim=p.rim;_rimAz=p.rimAz;_shOp=p.shOp;_shBlur=p.shBlur;_blOp=p.blOp; _updMain(); if(_dbgHemi) _dbgHemi.intensity=_hemi; _updRim(); _updSh(); _syncSliders(); };
             const btn=document.createElement('button');
             btn.id='shelf3dLightBtn';
             btn.title='Panel oświetlenia (Ctrl+Shift+L)';
@@ -1463,19 +1651,19 @@ function fitCameraToShelf() {
           const _w = parseInt(config && config.width) || 0;
           // Dla półki 84 cm (tylko mug_shelf) na mobile — widok całkowicie frontalny
           const _isWide84 = _isMobile && _w === 84;
-          const _cz = _isWide84 ? 14 : (_isMobile ? (_h >= 80 ? 17 : 14) : (_h >= 80 ? 15 : 11));
-          const _cx = _isWide84 ? 0.0001 : -2.8;
-          const _cy = 1.0;
-          // Target kamery — lekka korekta w dół żeby wyśrodkować półkę na mobile
-          const _ct = _isMobile ? (_h >= 80 ? 0.5 : (_h >= 60 ? 0.8 : 1.0)) : 0;
-          gsap.to(camera.position, {
-              x: _cx, y: _cy, z: _cz,
-              duration: 0.4,
-              ease: "power1.inOut",
-              onUpdate: function() { controls.update(); }
-          });
-          controls.target.set(0, _ct, 0);
-          if (_isWide84) autoRotateEnabled = false;
+          if (_isWide84) {
+              gsap.to(camera.position, { x: 0.0001, y: 1.0, z: 14, duration: 0.4, ease: "power1.inOut", onUpdate: () => controls.update() });
+              controls.target.set(0, 0, 0);
+              autoRotateEnabled = false;
+          } else if (_isMobile) {
+              // Na mobile: ten sam kąt co desktop, odległość dopasowana do węższego canvasu
+              shelf3dFitCameraMobile(_w || 44, _h, 0.4);
+          } else {
+              // Desktop: użyj skalibrowanych wartości z tabeli
+              const _camS = shelf3dGetCamForSize(_w, _h);
+              gsap.to(camera.position, { x: _camS.x, y: _camS.y, z: _camS.z, duration: 0.4, ease: "power1.inOut", onUpdate: () => controls.update() });
+              controls.target.set(_camS.tx || 0, _camS.ty || 0, _camS.tz || 0);
+          }
       }
       // +++ KONIEC PRZENIESIONEGO KODU +++
 
@@ -1506,16 +1694,22 @@ function fitCameraToShelf() {
                         const _h = parseInt(heightSelect && heightSelect.value) || 60;
                         const _wCur = parseInt(config && config.width) || 0;
                         const _isWide84 = _wCur === 84;
-                        const _z = _isWide84 ? 9.5 : (_h >= 80 ? 11 : _h >= 60 ? 9 : 8);
-                        const _x = _isWide84 ? 0.0001 : -3;
-                        const _tEnd = _h >= 80 ? 0.5 : (_h >= 60 ? 0.8 : 1.0);
-                        controls.target.set(0, _tEnd, 0);
-                        camera.position.set(_x, 0.5, _z);
-                        controls.update();
                         if (_isWide84) {
+                            controls.target.set(0, 0, 0);
+                            camera.position.set(0.0001, 1.0, 9.5);
+                            controls.update();
                             autoRotateEnabled = false;
-                            // Dodatkowe zabezpieczenie: upewnij się że shelfGroup ma rotation = 0
                             if (shelfGroup) shelfGroup.rotation.set(0, 0, 0);
+                        } else {
+                            // Auto-dopasowanie kamery — kąt z tabeli desktop, odległość dla canvasu mobile
+                            const _camSD = shelf3dGetCamForSize(_wCur || 44, _h);
+                            const _mDir = new THREE.Vector3(
+                                _camSD.x - (_camSD.tx||0),
+                                _camSD.y - (_camSD.ty||0),
+                                _camSD.z - (_camSD.tz||0)
+                            );
+                            shelf3dAutoFitCamera(0, _mDir);
+                            controls.update();
                         }
                     }
                     if (typeof shiftCanvasForHeight === 'function') shiftCanvasForHeight();
@@ -1927,10 +2121,30 @@ function fitCameraToShelf() {
                 return;
             }
             
+            // Przebuduj tylko gdy zmienia się typ półki
             if (shelfType !== lastValidConfig.shelfType || !animateChanges) {
                 await rebuildAndAnimateIn(config, animateChanges);
                 lastValidConfig = { ...config };
                 return;
+            }
+            // Przy zmianie wysokości lub szerokości — tylko lekka aktualizacja kamery (bez rebuild)
+            const _heightChanged = config.height !== lastValidConfig.height;
+            const _widthChanged  = String(config.width) !== String(lastValidConfig.width);
+            if ((_heightChanged || _widthChanged) && camera && controls) {
+                const _cW = parseInt(config.width) || 44;
+                const _cH = parseInt(config.height) || 60;
+                const _isMob = window.innerWidth < 768;
+                if (_isMob) {
+                    // Mobile: kąt z tabeli desktop, odległość dla węższego canvasu
+                    shelf3dFitCameraMobile(_cW, _cH, 0.5);
+                    const _camSD2 = shelf3dGetCamForSize(_cW, _cH);
+                    const _mDir2 = new THREE.Vector3(_camSD2.x-(_camSD2.tx||0), _camSD2.y-(_camSD2.ty||0), _camSD2.z-(_camSD2.tz||0));
+                    setTimeout(function() { shelf3dAutoFitCamera(0.35, _mDir2); }, 550);
+                } else {
+                    // Desktop: faza 1 — bieżący kąt, faza 2 — bounding box
+                    shelf3dFitCameraPredict(_cW, _cH, 0.5);
+                    setTimeout(function() { shelf3dAutoFitCamera(0.35); }, 550);
+                }
             }
 
             // Wzory z edytora — płynna aktualizacja przy zmianie szerokości/głębokości
@@ -3746,9 +3960,10 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
 
             sideColorSelect.value = details.sideColorValue;
             shelfColorSelect.value = details.shelfColorValue;
+            if(typeof shelf3dApplyColorLight==='function') shelf3dApplyColorLight(details.shelfColorValue);
 
-            await new Promise(resolve => setTimeout(resolve, 50)); 
-            
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             await updatePreview(false);
             updateOrderSummary(); 
         }
@@ -5360,6 +5575,12 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
         const isVisible = oldDalej && oldDalej.classList.contains('visible');
         topDalej.classList.toggle('visible', isVisible);
     }
+    // Aktywuj/dezaktywuj przycisk Dalej w lewym panelu
+    const _dalejIcon = document.getElementById('mobileDalejIconBtn');
+    if (_dalejIcon) {
+        const _paramsReady = oldDalej && oldDalej.classList.contains('visible');
+        _dalejIcon.classList.toggle('mdalej-inactive', !_paramsReady);
+    }
     // Sync params drawer open state
     const topParams = document.getElementById('topBarParams');
     const oldToggle = document.getElementById('mobileParamsDrawerToggle');
@@ -5584,7 +5805,7 @@ function generateOrderCode() { const shelfTypeVal = shelfTypeSelect.value; const
                 if(typeof init3D === 'function') init3D(); else console.error("init3D is not defined");
                 // Nasłuchuj zmian kolorów — aktualizuj tekstury bez przebudowy geometrii
                 if (sideColorSelect)  sideColorSelect.addEventListener('change',  () => { if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials(); });
-                if (shelfColorSelect) shelfColorSelect.addEventListener('change', () => { if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials(); });
+                if (shelfColorSelect) shelfColorSelect.addEventListener('change', () => { if(typeof shelf3dReapplyMaterials==='function') shelf3dReapplyMaterials(); if(typeof shelf3dApplyColorLight==='function') shelf3dApplyColorLight(shelfColorSelect.value); });
                 if(typeof updateSwatchDisplay === 'function') { updateSwatchDisplay('sideColor', 'sideColorSwatchDisplay'); updateSwatchDisplay('shelfColor', 'shelfColorSwatchDisplay'); } else console.error("updateSwatchDisplay is not defined");
               if(typeof initializeTabbedGallery === 'function') initializeTabbedGallery(); else console.error("initializeTabbedGallery is not defined");
                 // Domyślnie: Wisząca + galeria tab 0
