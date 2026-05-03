@@ -266,58 +266,47 @@ body.no-scroll {
     #modularShelfIconsContainer .modular-control-button.active-modular-icon { background-color: #16A34A; border-color: #15803d; color: #ffffff; box-shadow: 0 2px 6px rgba(22,163,74,0.35); transform: scale(1.05); }
 
     /* ---- PASEK OPCJI DLA PÓŁKI WISZĄCEJ I STOJĄCEJ (MOBILE) — styl paska kubki ---- */
+    /* hangingStandingShelfIconsContainer — teraz wewnątrz #mobileLeftPanel, nie dolny pasek */
     #hangingStandingShelfIconsContainer {
         display: none;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        position: absolute !important;
-        left: 0; right: 0; bottom: 0;
-        z-index: 1001;
+        position: static !important;
         gap: 5px;
-        padding: 5px 10px;
-        background: rgba(255,255,255,0.93);
-        backdrop-filter: blur(10px);
-        border-top: 1.5px solid rgba(22,163,74,0.25);
-        box-shadow: 0 -2px 8px rgba(22,163,74,0.07);
-        flex-wrap: nowrap;
+        padding: 0;
+        background: none;
+        border: none;
+        box-shadow: none;
     }
     #hangingStandingShelfIconsContainer.visible { display: flex !important; }
 
-    #hangingStandingShelfIconsContainer > span.hs-bar-label {
-        font-size: 0.42rem;
-        font-weight: 800;
-        color: #15803d;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
     .hs-icon-group {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
     }
 
     #hangingStandingShelfIconsContainer .hs-control-button {
-       display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1px;
-       padding: 0.2rem 0.45rem;
-       background-color: rgba(243, 244, 246, 0.9);
-       border: 1px solid #d1d5db;
-       border-radius: 0.4rem;
-       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
-       cursor: pointer;
-       transition: all 0.15s ease-in-out;
-       color: #4B5563;
-       font-size: 0.45rem;
-       font-weight: 700;
-       line-height: 1;
-       text-align: center;
+        display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px;
+        width: 52px; height: 52px; padding: 4px 2px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(209,213,219,0.5);
+        border-radius: 13px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.15s ease;
+        color: #6b7280;
+        font-size: 8px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.01em;
     }
-    #hangingStandingShelfIconsContainer .hs-control-button:hover { background-color: #dcfce7; border-color: #86efac; color: #15803d; transform: scale(1.05); }
-    #hangingStandingShelfIconsContainer .hs-control-button.active-hs-icon { background-color: #16A34A; border-color: #15803d; color: #ffffff; box-shadow: 0 2px 6px rgba(22,163,74,0.35); transform: scale(1.05); }
-    #hangingStandingShelfIconsContainer .hs-control-button svg { width: 0.85rem; height: 0.85rem; stroke-width: 1.75; }
+    #hangingStandingShelfIconsContainer .hs-control-button:active { transform: scale(0.92); background: rgba(240,240,240,0.75); }
+    #hangingStandingShelfIconsContainer .hs-control-button.active-hs-icon { background: rgba(220,252,231,0.9); border-color: rgba(22,163,74,0.4); color: #15803d; box-shadow: 0 2px 8px rgba(22,163,74,0.15); }
+    #hangingStandingShelfIconsContainer .hs-control-button svg { width: 18px; height: 18px; stroke-width: 1.5; flex-shrink: 0; }
 
 
 
@@ -622,7 +611,6 @@ body.no-scroll {
         #shelfContainer > #mobile3dTopBar,
         #shelfContainer > #mugShelfDividerIconsContainer,
         #shelfContainer > #modularShelfIconsContainer,
-        #shelfContainer > #hangingStandingShelfIconsContainer,
         #shelfContainer > #mobilePanelIcons,
         #shelfContainer > #mobileBottomRightActions {
             opacity: 0;
@@ -632,7 +620,6 @@ body.no-scroll {
         #shelfContainer.active > #mobile3dTopBar,
         #shelfContainer.active > #mugShelfDividerIconsContainer,
         #shelfContainer.active > #modularShelfIconsContainer,
-        #shelfContainer.active > #hangingStandingShelfIconsContainer,
         #shelfContainer.active > #mobilePanelIcons,
         #shelfContainer.active > #mobileBottomRightActions {
             opacity: 1;
@@ -667,7 +654,8 @@ body.no-scroll {
             will-change: transform;
             transform: translate3d(0,0,0);
         }
-        #shelfContainer.active #mobile3dTopBar { display: flex !important; }
+        /* Top bar ukryty — zastąpiony przez ikonki w panelach bocznych */
+        #shelfContainer.active #mobile3dTopBar { display: none !important; }
 
         /* Sekcja ceny */
         #topBarPrice {
@@ -973,19 +961,19 @@ body.no-scroll {
         #rotateToggleMobile { display: none !important; }
         #mobileBottomRightActions { display: none !important; }
 
-        /* ---- Nawigacja — prawa strona, pionowo ---- */
+        /* ---- Nawigacja — prawa strona, pionowo, zakotwiczona na górze ---- */
         #shelfContainer.active #mobilePanelIcons {
             display: flex !important; flex-direction: column !important;
             position: absolute !important;
-            right: 8px; top: 55%;
-            transform: translateY(-50%) translate3d(0,0,0);
+            right: 8px; top: 8px;
+            transform: translate3d(0,0,0);
             z-index: 1001 !important; gap: 5px;
             will-change: transform;
         }
         #mobilePanelIcons button {
             display: flex; align-items: center; justify-content: center;
             flex-direction: column;
-            width: 48px; height: 54px; padding: 4px 2px;
+            width: 52px; height: 52px; padding: 4px 2px;
             background: rgba(255,255,255,0.92);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(209,213,219,0.5);
@@ -997,6 +985,10 @@ body.no-scroll {
             will-change: transform;
             transform: translate3d(0,0,0);
             -webkit-transform: translate3d(0,0,0);
+        }
+        /* Rodzaj / Wymiary / Kolory — trochę wyższe bo mają dodatkowy wiersz tekstu */
+        #mobilePanelIcons button:not(#mobileCollapseIconBtn) {
+            height: 62px;
         }
         #mobilePanelIcons button:active { transform: scale(0.92); background: rgba(240,240,240,0.75); }
         #mobilePanelIcons button svg { width: 18px; height: 18px; margin: 0; color: #6b7280; transition: color 0.15s; flex-shrink: 0; }
@@ -1046,36 +1038,76 @@ body.no-scroll {
         }
         #mobileLeftPanel.icons-hidden {
             opacity: 0 !important;
-            transform: translateY(-50%) translateX(-80px) scale(0.7) !important;
+            transform: translateX(-80px) scale(0.7) !important;
             pointer-events: none !important;
             filter: blur(4px) !important;
         }
-        /* każda ikonka wylatuje z lekkim opóźnieniem (kaskada) */
+        /* kaskada animacji — teraz 4 ikony (Zwiń + Rodzaj + Wymiary + Kolory) */
         #mobilePanelIcons > *:nth-child(1) { transition-delay: 0ms !important; }
         #mobilePanelIcons > *:nth-child(2) { transition-delay: 40ms !important; }
         #mobilePanelIcons > *:nth-child(3) { transition-delay: 80ms !important; }
+        #mobilePanelIcons > *:nth-child(4) { transition-delay: 120ms !important; }
         /* przy powrocie — odwrócona kolejność */
-        #mobilePanelIcons.icons-returning > *:nth-child(1) { transition-delay: 80ms !important; }
-        #mobilePanelIcons.icons-returning > *:nth-child(2) { transition-delay: 40ms !important; }
-        #mobilePanelIcons.icons-returning > *:nth-child(3) { transition-delay: 0ms !important; }
+        #mobilePanelIcons.icons-returning > *:nth-child(1) { transition-delay: 120ms !important; }
+        #mobilePanelIcons.icons-returning > *:nth-child(2) { transition-delay: 80ms !important; }
+        #mobilePanelIcons.icons-returning > *:nth-child(3) { transition-delay: 40ms !important; }
+        #mobilePanelIcons.icons-returning > *:nth-child(4) { transition-delay: 0ms !important; }
 
-        /* ---- Lewy panel: Dodaj półki + Układ ---- */
+        /* Styl przycisku Zwiń 3D w prawej kolumnie ikon */
+        #mobileCollapseIconBtn {
+            background: rgba(231,229,228,0.92) !important;
+            border-color: rgba(168,162,158,0.4) !important;
+        }
+        #mobileCollapseIconBtn svg { color: #57534e !important; }
+        #mobileCollapseIconBtn span { color: #57534e !important; }
+        #mobileCollapseIconBtn:active { background: rgba(214,211,208,0.92) !important; }
+
+        /* ---- Lewy panel: Dalej + Dodaj półki + Układ ---- */
         #mobileLeftPanel {
             display: none;
             position: absolute !important;
             left: 8px;
-            top: 55%;
-            transform: translateY(-50%) translate3d(0,0,0);
+            top: 8px;
+            transform: translate3d(0,0,0);
             z-index: 1001;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
             will-change: transform;
             transition: transform 0.35s cubic-bezier(0.4,0,0.2,1),
                         opacity 0.35s cubic-bezier(0.4,0,0.2,1),
                         filter 0.35s ease !important;
         }
         #shelfContainer.active #mobileLeftPanel { display: flex !important; }
+
+        /* Styl przycisku Dalej w lewym panelu */
+        #mobileDalejIconBtn {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            width: 52px; height: 52px; padding: 6px 2px;
+            background: #16a34a;
+            border: 1px solid #15803d;
+            border-radius: 13px;
+            box-shadow: 0 2px 8px rgba(22,163,74,0.28);
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+            gap: 3px;
+            will-change: transform;
+            transform: translate3d(0,0,0);
+        }
+        #mobileDalejIconBtn svg { width: 18px; height: 18px; color: #fff; stroke: #fff; flex-shrink: 0; transition: opacity 0.2s; }
+        #mobileDalejIconBtn span { font-size: 8px; font-weight: 700; color: #fff; line-height: 1; letter-spacing: 0.01em; transition: opacity 0.2s; }
+        #mobileDalejIconBtn:not(.mdalej-inactive):active { background: #15803d !important; transform: scale(0.92) !important; }
+        /* Stan nieaktywny — szary, nie można kliknąć */
+        #mobileDalejIconBtn.mdalej-inactive {
+            background: rgba(209,213,219,0.7);
+            border-color: rgba(156,163,175,0.4);
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
+        #mobileDalejIconBtn.mdalej-inactive svg { stroke: #9ca3af; color: #9ca3af; }
+        #mobileDalejIconBtn.mdalej-inactive span { color: #9ca3af; }
 
         /* ---- Panel WŁASNE ROZMIESZCZENIE — w lewym panelu ---- */
         #mobileCustomShelfPanel {
